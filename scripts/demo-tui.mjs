@@ -1,7 +1,5 @@
+import { randomUUID } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
-import { resolve } from 'node:path';
-import { loadReceiverConfig } from '../receiver/config.mjs';
-import { WledOutput } from '../receiver/wled-output.mjs';
 
 export const DEMO_KEYS = Object.freeze({
   1: { state: 'idle', label: '空闲 / 熄灯', color: '\x1b[90m' },
@@ -15,48 +13,115 @@ export function demoStateForKey(key) {
   return DEMO_KEYS[key]?.state ?? null;
 }
 
-function configPathFromArgs(arguments_) {
-  if (arguments_.length === 0) return resolve('receiver/config.example.json');
-  if (arguments_.length === 2 && arguments_[0] === '--config') return resolve(arguments_[1]);
-  throw new Error('用法：node scripts/demo-tui.mjs [--config <path>]');
+export function createDemoSnapshot({ sourceId, instanceId, sequence, state, now = new Date() }) {
+  const counts = Object.fromEntries(
+    Object.values(DEMO_KEYS).map((item) => [item.state, item.state === state ? 1 : 0]),
+  );
+  return {
+    protocol_version: 1,
+    source_id: sourceId,
+    instance_id: instanceId,
+    sequence,
+    sent_at: now.toISOString(),
+    state,
+    cause: 'aggregate',
+    counts,
+  };
 }
 
-export async function runDemoTui(configPath, {
+export function parseDemoArguments(arguments_) {
+  const values = { sourceId: 'home-server', requestTimeoutMs: 5_000 };
+  for (let index = 0; index < arguments_.length; index += 2) {
+    const key = arguments_[index];
+    const value = arguments_[index + 1];
+    if (!value) throw new Error('参数必须成对提供');
+    if (key === '--url') values.url = value;
+    else if (key === '--source') values.sourceId = value;
+    else if (key === '--timeout') values.requestTimeoutMs = Number(value);
+    else throw new Error(`未知参数：${key}`);
+  }
+  if (!values.url) {
+    throw new Error('用法：npm run demo -- --url http://<手机地址>:8787/v1/state');
+  }
+  const url = new URL(values.url);
+  if (!['http:', 'https:'].includes(url.protocol) || url.pathname !== '/v1/state') {
+    throw new Error('--url 必须是 http(s)://<具体地址>/v1/state');
+  }
+  if (url.username || url.password || url.search || url.hash) {
+    throw new Error('--url 不能包含凭据、查询参数或片段');
+  }
+  if (!/^[a-z0-9][a-z0-9._-]{0,63}$/.test(values.sourceId)) throw new Error('--source 无效');
+  if (!Number.isInteger(values.requestTimeoutMs) || values.requestTimeoutMs < 100 || values.requestTimeoutMs > 60_000) {
+    throw new Error('--timeout 必须为 100..60000 毫秒');
+  }
+  return { ...values, url };
+}
+
+export async function postDemoState(targetUrl, snapshot, {
+  fetchImpl = globalThis.fetch,
+  requestTimeoutMs = 5_000,
+} = {}) {
+  const response = await fetchImpl(targetUrl, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(snapshot),
+    signal: AbortSignal.timeout(requestTimeoutMs),
+  });
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(`手机 Receiver 返回 HTTP ${response.status}（${result?.error?.code ?? 'unknown'}）`);
+  }
+  if (result.instance_id !== snapshot.instance_id || result.sequence !== snapshot.sequence) {
+    throw new Error('手机 Receiver 响应与请求不匹配');
+  }
+  return result;
+}
+
+export async function runDemoTui(options, {
   input = process.stdin,
   output = process.stdout,
+  fetchImpl = globalThis.fetch,
 } = {}) {
   if (!input.isTTY || typeof input.setRawMode !== 'function') {
     throw new Error('Demo TUI 必须在交互式终端中运行');
   }
-  const config = await loadReceiverConfig(configPath);
+  const instanceId = randomUUID();
   let currentState = 'idle';
-  let message = config.dryRun ? 'dry-run：不会连接真实 WLED' : 'WLED 模式';
+  let message = `目标：${options.url.href}`;
+  let sequence = 0;
   let stopping = false;
+  let pending = Promise.resolve();
   let finish;
   const done = new Promise((resolveDone) => { finish = resolveDone; });
 
   const render = () => {
     const current = Object.values(DEMO_KEYS).find(({ state }) => state === currentState);
     output.write('\x1b[2J\x1b[H');
-    output.write('AgentBeacon Demo\n\n');
+    output.write('AgentBeacon 手机 Demo\n\n');
     for (const [key, item] of Object.entries(DEMO_KEYS)) {
       output.write(`${item.color}[${key}] ${item.label}\x1b[0m\n`);
     }
-    output.write('\n[q] 退出并熄灯\n\n');
+    output.write('\n[q] 发送 idle 并退出\n\n');
     output.write(`当前：${current.color}${current.label}\x1b[0m\n${message}\n`);
   };
 
-  const logger = {
-    info(value) { message = value; render(); },
-    warn(value) { message = value; render(); },
+  const queueState = (state) => {
+    const snapshot = createDemoSnapshot({
+      sourceId: options.sourceId,
+      instanceId,
+      sequence: ++sequence,
+      state,
+    });
+    pending = pending.catch(() => {}).then(async () => {
+      const result = await postDemoState(options.url, snapshot, {
+        fetchImpl,
+        requestTimeoutMs: options.requestTimeoutMs,
+      });
+      message = `已发送 ${state}，sequence=${snapshot.sequence}，${result.disposition}`;
+      render();
+    });
+    return pending;
   };
-  const wled = new WledOutput({
-    baseUrl: config.wledBaseUrl,
-    presets: config.presets,
-    dryRun: config.dryRun,
-    requestTimeoutMs: config.requestTimeoutMs,
-    logger,
-  });
 
   const cleanup = async () => {
     if (stopping) return;
@@ -64,11 +129,17 @@ export async function runDemoTui(configPath, {
     input.off('data', onKey);
     input.setRawMode(false);
     input.pause();
-    wled.ensureState('idle');
-    await wled.waitForIdle();
-    wled.close();
-    output.write('\x1b[2J\x1b[HDemo 已退出，状态已切换为 idle。\n');
+    currentState = 'idle';
+    message = '正在发送 idle…';
+    render();
+    await queueState('idle');
+    output.write('\x1b[2J\x1b[HDemo 已退出，手机状态已切换为 idle。\n');
     finish();
+  };
+
+  const reportFailure = (error) => {
+    message = `发送失败：${error.message}`;
+    render();
   };
 
   const onKey = (buffer) => {
@@ -84,20 +155,19 @@ export async function runDemoTui(configPath, {
     const state = demoStateForKey(key);
     if (!state) return;
     currentState = state;
-    message = `已选择 ${state}`;
-    wled.ensureState(state);
+    message = `正在发送 ${state}…`;
     render();
+    void queueState(state).catch(reportFailure);
   };
 
   input.setRawMode(true);
   input.resume();
   input.on('data', onKey);
-  wled.ensureState('idle');
   render();
   return { cleanup, done };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const tui = await runDemoTui(configPathFromArgs(process.argv.slice(2)));
+  const tui = await runDemoTui(parseDemoArguments(process.argv.slice(2)));
   await tui.done;
 }
