@@ -12,13 +12,14 @@ Agent 先读 [AGENTS.md](AGENTS.md)，再按 [任务看板](docs/tasks.md) 领�
 
 - [当前执行方案](docs/proposal.md)
 - [项目管理规则](docs/project-management.md)
+- [协议与状态规则](docs/protocol.md)
 - [决策与待确认事项](docs/decisions.md)
 - [最新交接](docs/handoff.md)
 - [原始方案存档](docs/proposal-original.md)（历史参考）
 
 ## 当前进度
 
-已完成 Herdr 0.8.2 Unix socket / protocol 20 的真实状态验证和安全被动采样器，下一步是 T-004 协议与状态规则。尚未实现 Receiver、聚合或远程同步，尚未进行手机或硬件联调。当前无第三方依赖。
+已完成 Herdr 0.8.2 Unix socket / protocol 20 的真实状态验证、安全被动采样器和 AgentBeacon v1 协议。下一步可实现 T-006 Receiver 或 T-007 聚合发送端；T-005 手机可行性探针需用户配合。尚未实现 Receiver、聚合或远程同步，尚未进行手机或硬件联调。当前无第三方依赖。
 
 ```bash
 cd /home/cd233/CODE/Linux_Exp/agentbeacon
