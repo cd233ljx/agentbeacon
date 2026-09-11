@@ -31,6 +31,8 @@ npm test
 
 安全回环链路可依次运行 `npm run receiver` 和 `npm run sender`；Receiver 默认只监听 `127.0.0.1:8787`。
 
+课堂展示可直接运行 `npm run demo`。这个极简 TUI 不连接 Herdr、不读取真实 Agent 状态；按 `1`～`5` 手动切换 idle、working、blocked、done、unknown，按 `q` 切回 idle 并退出。默认示例为 dry-run；接真实 WLED 时使用 `npm run demo -- --config <path>`。
+
 ## 目录
 
 | 目录 | 职责 |
@@ -43,4 +45,4 @@ npm test
 | systemd/ | Linux 服务器后续进程管理 |
 | docs/ | 方案、任务、决策、交接与验收证据 |
 
-配置模板 receiver/config.example.json 尚未接入代码。开发默认回环监听；私网联调使用接收端具体 Tailscale IP。
+开发默认回环监听；私网联调使用接收端具体 Tailscale IP。

@@ -5,6 +5,7 @@
 
 ## 本轮结果
 
+- 为课堂展示新增 `npm run demo` 极简按键 TUI：不连接 Herdr、不读取真实 Agent 状态、不启动 HTTP 服务；`1`～`5` 手动切换五态，`q` 恢复 idle 并退出。默认使用 dry-run，传入真实 Receiver 配置即可直接控制 WLED preset。
 - T-008：实现显式 Demo 模式；配置启用后 `POST /state` 切换五态，`DELETE /state` 退出，证据见 docs/evidence/T-008.md。
 - Demo 期间正式 `/v1/state` 继续校验、排序和刷新，但不覆盖 Demo；退出恢复未超时正式状态，否则 unknown。默认 `demoEnabled=false`，未启用时接口返回 404。
 - T-005：vivo-phone 的 Termux 单文件 Receiver 已通过 Tailscale 接收服务器 v1 状态；热点同时开启，证据见 docs/evidence/T-005.md。
@@ -18,7 +19,6 @@
 - T-006：实现跨平台 Node.js Receiver、v1 协议校验、请求体限制、来源限制、顺序/重启处理、心跳超时、dry-run 和 WLED 输出，证据见 docs/evidence/T-006.md。
 - Receiver 默认只监听 `127.0.0.1:8787`，并明确拒绝 `0.0.0.0` / `::`；远程联调需显式填写具体 Tailscale IP。
 - WLED 输出按官方 JSON API 向 `/json/state` POST `{"ps": preset}`；成功状态不重复发送，失败有界重试，后续心跳可恢复，更新状态会取消旧状态尚未发出的重试。
-- `POST /state` 仍未实现且返回 404；`demoEnabled` 只是 T-008 预留配置，不能把它视为已完成 Demo。
 - T-004：新增 docs/protocol.md，正式定义 AgentBeacon HTTP/JSON v1，包括来源/进程实例、递增序号、重复/乱序/重启、心跳/过期、错误响应、发送合并、WLED 恢复与 Demo 隔离。
 - 用户确认 D-007：部分会话 unknown 时使用 `blocked > working > unknown > done > idle`；已知阻塞和工作优先，只有没有更高优先级活动时才显示采集异常。
 - 聚合规则明确：采集健康且零会话为 idle；release/exit/close 后删除会话并重新聚合；全局采集初始化、失败或协议不兼容均为 unknown。
@@ -38,8 +38,8 @@
 
 ## 验证
 
-本轮 `npm test`：44 项通过、0 项失败；`npm run check`、`git diff --check` 和 Markdown 相对链接检查通过。T-005 已取得真机网络和短时锁屏证据，但仍不代表真实 WLED 或长时间后台通过；临时下载服务已确认停止。
-T-003 提交为 `962b6eb`，T-004 为 `ea410ae`，T-006 为 `9490b97`，T-007 为 `e1d7bb7`，T-005 为 `8851916`；T-008 修改尚未提交。无远程仓库配置。
+本轮 `npm test`：45 项通过、0 项失败；`npm run check`、`git diff --check` 和 Markdown 相对链接检查通过。TUI 另经伪终端实际验证 `2` 切换 working、`q` 恢复 idle 并正常退出。T-005 已取得真机网络和短时锁屏证据，但仍不代表真实 WLED 或长时间后台通过；临时下载服务已确认停止。
+T-003 提交为 `962b6eb`，T-004 为 `ea410ae`，T-006 为 `9490b97`，T-007 为 `e1d7bb7`，T-005 为 `8851916`，T-008 基础实现为 `ed6a2ee`。无远程仓库配置。
 
 ## 下一步
 

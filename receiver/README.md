@@ -18,6 +18,14 @@ curl -X POST http://127.0.0.1:8787/state -H 'Content-Type: application/json' -d 
 curl -X DELETE http://127.0.0.1:8787/state
 ```
 
+只做现场展示、不需要读取真实状态时，可以跳过 Receiver 和 Sender，直接运行按键 TUI：
+
+```bash
+npm run demo
+```
+
+按 `1`～`5` 分别显示 idle、working、blocked、done、unknown，按 `q` 切回 idle 并退出。默认配置是 dry-run；接入真实 WLED 后用 `npm run demo -- --config <path>` 指定 `dryRun: false`、WLED 地址和 preset 映射。TUI 只负责手动切灯，不连接 Herdr。
+
 Demo 期间正式快照继续缓存但不覆盖灯效，退出后恢复未超时的正式状态，否则显示 unknown。`GET /health` 返回聚合状态、超时、dry-run 和 Demo 标志，不返回任务或 Agent 信息。
 
 参考任务 T-005、T-006、T-008、T-010、T-011；不在核心逻辑中依赖 shell 或 systemd。
