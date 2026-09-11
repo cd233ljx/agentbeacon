@@ -8,7 +8,7 @@
 | T-002 | 当前方案与 Agent 管理入口 | done | T-001 | 文档 Agent | 当前架构、规则、任务、决策和交接齐全；本轮文档检查见 handoff |
 | T-003 | Herdr Unix socket 接口与状态验证 | done | 无 | Codex | 已确认 0.8.2 / protocol 20、socket 权限、NDJSON/订阅接口、历史重放、采集进程生命周期；实测 idle/working/done/blocked/agent release；证据 docs/evidence/T-003.md |
 | T-004 | 协议与状态规则 | done | T-003 | Codex | docs/protocol.md 已定义 v1 包、来源实例、顺序/重启、心跳/超时、清除、unknown 聚合、Demo 隔离及示例；D-007 经用户确认 |
-| T-005 | 手机接收可行性探针 | todo | 用户可操作手机 | — | 最小 Receiver 在 Termux 打印服务器模拟状态；热点+Tailscale 共存；记录锁屏和恢复结果；不要求硬件 |
+| T-005 | 手机接收可行性探针 | done | 用户可操作手机 | Codex | vivo-phone/Termux 在热点+Tailscale 下接收 working/blocked/done；锁屏 20 秒期间三次均成功，恢复后 idle 成功；证据 docs/evidence/T-005.md |
 | T-006 | Receiver 与模拟 WLED | done | T-004 | Codex | 23 项测试通过；v1 校验/4096-byte 限制/顺序/15 秒超时/preset 映射/去重/有界重试与恢复均覆盖；回环 dry-run 实测，证据 docs/evidence/T-006.md |
 | T-007 | 聚合与 Herdr 发送端 | done | T-003、T-004 | Codex | 40 项测试通过；覆盖 protocol 20、双快照 reconciliation、历史重放、pane_not_found、生命周期清除、多会话优先级、心跳、合并重试、断线 unknown 与重连；证据 docs/evidence/T-007.md |
 | T-008 | 独立 Demo 模式 | todo | T-006 | — | 可切换五态；真实同步不覆盖 Demo；退出恢复有效快照或 unknown |

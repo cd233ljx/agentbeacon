@@ -1,10 +1,14 @@
 # 最新交接
 
 日期：2026-09-11
-当前阶段：T-003、T-004、T-006、T-007 已完成；下一项优先为 T-005 Android/Termux 可行性探针，无手机配合时可推进 T-008 Demo。尚未进行手机、Windows 或硬件联调。
+当前阶段：T-003～T-007（除编号顺序中的实现先后）均已完成；下一项为 T-008 Demo。Android/Termux 网络可行性已验证，Windows 和 ESP32/WLED 硬件尚未联调。
 
 ## 本轮结果
 
+- T-005：vivo-phone 的 Termux 单文件 Receiver 已通过 Tailscale 接收服务器 v1 状态；热点同时开启，证据见 docs/evidence/T-005.md。
+- 短时锁屏约 20 秒期间，以 10 秒间隔发送 working、blocked、done 均成功；测试后 idle 也成功。该结果不外推为长时间后台稳定。
+- 本次按用户明确授权让手机临时监听 `0.0.0.0:8787`；正式 Receiver 仍拒绝通配监听。服务器单文件下载服务只绑定具体 Tailscale IP，现已停止。
+- 服务器 curl 需使用 `--noproxy '*'` 才直连 Tailscale 地址；Node.js fetch 直连无此问题。8787 不是特权低端口。
 - T-007：实现 Herdr protocol 20 客户端、双快照 reconciliation、历史生命周期核对、逐 pane 状态订阅、多会话聚合、断线重连和 HTTP 心跳发送，证据见 docs/evidence/T-007.md。
 - 发送端启动时先发送 initializing/unknown；采集健康后发送 counts 聚合。Herdr 断线或 schema 失败立即输出 unknown，重连后重新订阅和获取完整快照，不重放灯效积压。
 - Snapshot sender 每进程生成 instance UUID，sequence 严格递增；失败可同 sequence 有界重试，新状态替换未开始的旧重试，稳定状态默认每 5 秒发送新 sequence。
@@ -32,12 +36,12 @@
 
 ## 验证
 
-本轮 `npm test`：40 项通过、0 项失败；`npm run check` 与 `git diff --check` 通过。T-006 回环 dry-run 实测初始 unknown、接收 done、15 秒无新 sequence 后回到 unknown，服务随后已停止。T-007 使用模拟 Herdr 和真实回环 HTTP Receiver 验证；不代表真机链路通过。
-本地 Markdown 相对链接检查通过。T-003 提交为 `962b6eb`，T-004 提交为 `ea410ae`，T-006 提交为 `9490b97`；T-007 修改尚未提交。无远程仓库配置。
+本轮 `npm test`：41 项通过、0 项失败；`npm run check`、`git diff --check` 和 Markdown 相对链接检查通过。T-005 已取得真机网络和短时锁屏证据，但仍不代表真实 WLED 或长时间后台通过；临时下载服务已确认停止。
+T-003 提交为 `962b6eb`，T-004 为 `ea410ae`，T-006 为 `9490b97`，T-007 为 `e1d7bb7`；T-005 修改尚未提交。无远程仓库配置。
 
 ## 下一步
 
-优先领取 T-005，给用户最短 Android/Termux 环境检查与回环/具体 Tailscale IP 启动步骤，验证服务器到手机 Receiver、热点共存、锁屏和恢复；在用户回传前保持待验证。若用户暂时不方便操作手机，则领取 T-008，实现与正式快照隔离的 Demo 接口。
+领取 T-008，实现显式 Demo 启停与五态切换；Demo 期间继续校验和缓存正式快照但不覆盖灯效，退出后恢复未超时的正式状态，否则 unknown。保持接口简单，以演示作业需要为准。
 
 ## 限制
 
