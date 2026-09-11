@@ -1,10 +1,9 @@
-# 测试规划
+# 测试
 
-实现业务逻辑时使用 Node.js 内置 node:test，无需额外框架。
+使用 Node.js 内置 `node:test`，运行：
 
-- 聚合：多会话优先级、空集合、会话结束与过期。
-- Receiver：合法/非法请求、preset 映射、WLED 超时与失败。
-- 通信：心跳中断、恢复、重复及乱序事件。
-- 集成：回环地址上的模拟 WLED，避免依赖真实硬件。
+```bash
+npm test
+```
 
-目前尚无业务代码或业务测试；npm run check 仅作语法检查。
+当前覆盖 Herdr 被动探针、v1 协议校验、Receiver 配置、顺序/重启/超时、HTTP 限制，以及本地模拟 WLED 的 preset 映射、去重、重试和恢复。模拟结果不替代 Android、Windows 或真实 WLED 验收。

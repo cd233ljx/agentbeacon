@@ -19,14 +19,17 @@ Agent 先读 [AGENTS.md](AGENTS.md)，再按 [任务看板](docs/tasks.md) 领�
 
 ## 当前进度
 
-已完成 Herdr 0.8.2 Unix socket / protocol 20 的真实状态验证、安全被动采样器和 AgentBeacon v1 协议。下一步可实现 T-006 Receiver 或 T-007 聚合发送端；T-005 手机可行性探针需用户配合。尚未实现 Receiver、聚合或远程同步，尚未进行手机或硬件联调。当前无第三方依赖。
+已完成 Herdr 0.8.2 Unix socket / protocol 20 验证、安全被动采样器、AgentBeacon v1 协议，以及跨平台 Receiver 与模拟 WLED。下一步是 T-007 Herdr 聚合发送端；T-005 手机可行性探针需用户配合。尚未实现真实远程发送，尚未进行手机或硬件联调。当前无第三方依赖。
 
 ```bash
 cd /home/cd233/CODE/Linux_Exp/agentbeacon
 npm ci
 npm run doctor
 npm run check
+npm test
 ```
+
+安全 dry-run 可用 `npm run receiver` 启动，只监听 `127.0.0.1:8787`。
 
 ## 目录
 
