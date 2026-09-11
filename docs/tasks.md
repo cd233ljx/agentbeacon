@@ -11,7 +11,7 @@
 | T-005 | 手机接收可行性探针 | done | 用户可操作手机 | Codex | vivo-phone/Termux 在热点+Tailscale 下接收 working/blocked/done；锁屏 20 秒期间三次均成功，恢复后 idle 成功；证据 docs/evidence/T-005.md |
 | T-006 | Receiver 与模拟 WLED | done | T-004 | Codex | 23 项测试通过；v1 校验/4096-byte 限制/顺序/15 秒超时/preset 映射/去重/有界重试与恢复均覆盖；回环 dry-run 实测，证据 docs/evidence/T-006.md |
 | T-007 | 聚合与 Herdr 发送端 | done | T-003、T-004 | Codex | 40 项测试通过；覆盖 protocol 20、双快照 reconciliation、历史重放、pane_not_found、生命周期清除、多会话优先级、心跳、合并重试、断线 unknown 与重连；证据 docs/evidence/T-007.md |
-| T-008 | 独立 Demo 模式 | todo | T-006 | — | 可切换五态；真实同步不覆盖 Demo；退出恢复有效快照或 unknown |
+| T-008 | 独立 Demo 模式 | done | T-006 | Codex | `POST /state` 可切换五态、`DELETE /state` 退出；正式同步只缓存不覆盖；退出恢复有效快照或 unknown；44 项测试通过，证据 docs/evidence/T-008.md |
 | T-009 | 硬件定型与 WLED 配置 | todo | 用户采购与设备操作 | — | 核实板型/供电/引脚；五个 preset 实测；备份不含 Wi-Fi 凭据的 preset 配置 |
 | T-010 | Android 真机全链路 | todo | T-005～T-009 | — | 真实 working→blocked→done 常亮；多 Agent、超时黄灯和恢复；手机访问热点 ESP32；记录延迟与限制 |
 | T-011 | Windows 备用验证 | todo | T-006、T-008；用户 Windows 环境 | — | 原生 Node 启动、模拟链路和停止流程实测；真实 WLED 未测则明确标注 |

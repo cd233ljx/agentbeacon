@@ -1,4 +1,6 @@
-import { canonicalSnapshot, ProtocolError } from '../shared/protocol.mjs';
+import { AGENT_STATES, canonicalSnapshot, ProtocolError } from '../shared/protocol.mjs';
+
+const STATE_SET = new Set(AGENT_STATES);
 
 export class ReceiverStateStore {
   constructor({ allowedSourceId, timeoutMs = 15_000, output, clock = () => performance.now() }) {
@@ -12,6 +14,7 @@ export class ReceiverStateStore {
     this.lastAcceptedAt = null;
     this.receivedState = null;
     this.displayedState = 'unknown';
+    this.demoActive = false;
     this.retiredInstances = new Set();
     this.timedOut = false;
     this.output.ensureState('unknown');
@@ -39,14 +42,16 @@ export class ReceiverStateStore {
       this.retiredInstances.add(this.currentInstanceId);
     }
 
-    const stateChanged = this.displayedState !== snapshot.state;
     this.currentInstanceId = snapshot.instance_id;
     this.highestSequence = snapshot.sequence;
     this.lastCanonical = canonical;
     this.lastAcceptedAt = this.clock();
     this.receivedState = snapshot.state;
-    this.displayedState = snapshot.state;
     this.timedOut = false;
+    if (this.demoActive) return this.#result('refreshed', snapshot);
+
+    const stateChanged = this.displayedState !== snapshot.state;
+    this.displayedState = snapshot.state;
     // 成功应用时是空操作；此前失败时可借新 sequence 心跳恢复 WLED。
     this.output.ensureState(snapshot.state);
     return this.#result(stateChanged ? 'applied' : 'refreshed', snapshot);
@@ -56,11 +61,36 @@ export class ReceiverStateStore {
     if (this.lastAcceptedAt === null || this.timedOut) return false;
     if (now - this.lastAcceptedAt < this.timeoutMs) return false;
     this.timedOut = true;
+    if (this.demoActive) return true;
     if (this.displayedState !== 'unknown') {
       this.displayedState = 'unknown';
       this.output.ensureState('unknown');
     }
     return true;
+  }
+
+  setDemoState(state) {
+    if (!STATE_SET.has(state)) throw new ProtocolError('invalid_state', 'Demo state 无效');
+    this.demoActive = true;
+    if (this.displayedState !== state) {
+      this.displayedState = state;
+      this.output.ensureState(state);
+    }
+    return state;
+  }
+
+  exitDemo(now = this.clock()) {
+    if (!this.demoActive) return this.displayedState;
+    this.demoActive = false;
+    if (this.lastAcceptedAt !== null && now - this.lastAcceptedAt >= this.timeoutMs) {
+      this.timedOut = true;
+    }
+    const restored = !this.timedOut && this.receivedState ? this.receivedState : 'unknown';
+    if (this.displayedState !== restored) {
+      this.displayedState = restored;
+      this.output.ensureState(restored);
+    }
+    return restored;
   }
 
   #result(disposition, snapshot) {

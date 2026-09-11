@@ -78,7 +78,36 @@ export function createReceiverService(rawConfig, { output, clock, logger = conso
         state: store.displayedState,
         timed_out: store.timedOut,
         dry_run: config.dryRun,
+        demo_active: store.demoActive,
       });
+      return;
+    }
+    if (config.demoEnabled && request.url === '/state' && request.method === 'DELETE') {
+      request.resume();
+      sendJson(response, 200, { demo: false, state: store.exitDemo() });
+      return;
+    }
+    if (config.demoEnabled && request.url === '/state' && request.method === 'POST') {
+      const contentType = request.headers['content-type']?.split(';', 1)[0].trim().toLowerCase();
+      if (contentType !== 'application/json') {
+        request.resume();
+        sendJson(response, 415, {
+          error: { code: 'unsupported_media_type', message: 'Content-Type 必须是 application/json' },
+        });
+        return;
+      }
+      try {
+        const body = JSON.parse(await readBody(request));
+        if (!body || typeof body !== 'object' || Array.isArray(body) || typeof body.state !== 'string') {
+          throw new ProtocolError('invalid_demo_state', 'Demo 请求必须包含 state');
+        }
+        sendJson(response, 200, { demo: true, state: store.setDemoState(body.state) });
+      } catch (error) {
+        const failure = errorResponse(error);
+        sendJson(response, failure.status, {
+          error: { code: failure.code, message: failure.message },
+        });
+      }
       return;
     }
     if (request.method !== 'POST' || request.url !== '/v1/state') {

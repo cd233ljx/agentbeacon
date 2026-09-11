@@ -73,6 +73,7 @@ test('Receiver accepts valid snapshots and exposes aggregate-only health', async
     state: 'working',
     timed_out: false,
     dry_run: true,
+    demo_active: false,
   });
 });
 

@@ -230,7 +230,13 @@ Receiver 为配置的 `source_id` 保存当前 `instance_id`、最高 `sequence`
 - Demo 启用时，正式快照仍可校验、排序、刷新存活并缓存，但不得覆盖当前 Demo 灯效。
 - 退出 Demo 时恢复最新且未超时的正式快照；没有有效快照则显示 `unknown`。
 
-Demo 的具体启停接口和访问限制由 T-008 实现并测试。
+Receiver 配置 `demoEnabled: false` 时，`/state` 返回 404。显式启用后：
+
+- `POST /state` + `{"state":"blocked"}`：进入 Demo 并切换到指定五态之一。
+- `DELETE /state`：退出 Demo，返回并恢复当前未超时的正式状态；没有有效状态时恢复 `unknown`。
+- `GET /health` 的 `demo_active` 表示 Demo 是否生效。
+
+Demo 接口沿用 Receiver 的监听地址边界；演示结束后应退出 Demo 或停止 Receiver。
 
 ## 安全与兼容
 

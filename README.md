@@ -19,7 +19,7 @@ Agent 先读 [AGENTS.md](AGENTS.md)，再按 [任务看板](docs/tasks.md) 领�
 
 ## 当前进度
 
-已完成 Herdr Unix socket 验证、v1 协议、Receiver、模拟 WLED、聚合发送端，以及 Android/Termux 的 Tailscale、热点和短时锁屏可行性验证。下一步可推进 T-008 Demo；ESP32/WLED 硬件和 Windows 尚未联调。当前无第三方依赖。
+已完成 Herdr Unix socket 验证、v1 协议、Receiver、模拟 WLED、聚合发送端、独立 Demo，以及 Android/Termux 的 Tailscale、热点和短时锁屏验证。软件模拟链路已经闭合；下一步 T-009 需要确认和采购 ESP32/灯环，真实 WLED 和 Windows 尚未联调。当前无第三方依赖。
 
 ```bash
 cd /home/cd233/CODE/Linux_Exp/agentbeacon
