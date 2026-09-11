@@ -1,0 +1,13 @@
+{
+  "host": "127.0.0.1",
+  "port": 8787,
+  "dryRun": true,
+  "wledBaseUrl": "http://192.168.1.100",
+  "presets": {
+    "idle": 1,
+    "working": 2,
+    "blocked": 3,
+    "done": 4,
+    "unknown": 5
+  }
+}

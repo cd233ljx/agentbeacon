@@ -1,0 +1,13 @@
+{
+  "name": "agentbeacon",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Linux AI Coding Agent 物理状态指示系统",
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "doctor": "node scripts/doctor.mjs",
+    "check": "node scripts/check.mjs",
+    "test": "node --test"
+  }
+}

@@ -1,0 +1,9 @@
+node_modules/
+.env
+.env.*
+!.env.example
+receiver/config.json
+server/config.json
+*.log
+coverage/
+.DS_Store
