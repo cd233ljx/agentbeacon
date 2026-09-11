@@ -4,7 +4,12 @@ import net from 'node:net';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { sanitizeAgent, sanitizeEvent, subscribe } from '../server/herdr-probe.mjs';
+import {
+  requestOnce,
+  sanitizeAgent,
+  sanitizeEvent,
+  subscribe,
+} from '../server/herdr-probe.mjs';
 
 const observedAt = '2026-09-11T00:00:00.000Z';
 
@@ -145,5 +150,39 @@ test('subscribe surfaces a safe code from an internal probe error', async (conte
   await assert.rejects(
     subscribe(socketPath, 'outer', [{ type: 'pane.agent_status_changed', pane_id: 'w1:p1' }], () => {}),
     /Herdr API 错误：not_found/,
+  );
+});
+
+test('subscribe rejects an invalid acknowledgement envelope', async (context) => {
+  const directory = await mkdtemp(join(tmpdir(), 'agentbeacon-herdr-probe-invalid-ack-'));
+  const socketPath = join(directory, 'herdr.sock');
+  context.after(() => rm(directory, { recursive: true, force: true }));
+
+  const server = net.createServer((socket) => {
+    socket.once('data', (data) => {
+      const request = JSON.parse(data.toString().trim());
+      socket.write(`${JSON.stringify({ id: request.id, result: { type: 'pong' } })}\n`);
+    });
+  });
+  await new Promise((resolve) => server.listen(socketPath, resolve));
+  context.after(() => server.close());
+
+  await assert.rejects(
+    subscribe(socketPath, 'invalid_ack', [{ type: 'pane.agent_detected' }], () => {}),
+    /订阅确认结构无效/,
+  );
+});
+
+test('requestOnce fails immediately when Herdr closes before responding', async (context) => {
+  const directory = await mkdtemp(join(tmpdir(), 'agentbeacon-herdr-probe-close-'));
+  const socketPath = join(directory, 'herdr.sock');
+  context.after(() => rm(directory, { recursive: true, force: true }));
+  const server = net.createServer((socket) => socket.once('data', () => socket.end()));
+  await new Promise((resolve) => server.listen(socketPath, resolve));
+  context.after(() => server.close());
+
+  await assert.rejects(
+    requestOnce(socketPath, { id: 'close', method: 'ping', params: {} }, 1_000),
+    /返回响应前关闭连接/,
   );
 });

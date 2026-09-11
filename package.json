@@ -9,6 +9,7 @@
     "doctor": "node scripts/doctor.mjs",
     "check": "node scripts/check.mjs",
     "receiver": "node scripts/run-receiver.mjs",
+    "sender": "node scripts/run-sender.mjs",
     "test": "node --test"
   }
 }

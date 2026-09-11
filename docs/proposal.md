@@ -29,7 +29,7 @@ Android 手机
 
 Herdr 负责原始状态识别，server 通过 Herdr Unix socket 采集状态，shared 负责聚合规则，server 负责远程同步，receiver 负责状态接收与 preset 映射，WLED 负责灯效。Unix socket 是唯一预期状态来源；CLI 仅用于只读核实版本、帮助和 socket 配置，不以 CLI 输出或终端正文代替状态接口。
 
-Herdr 插件接口和真实状态映射必须按安装版本验证。官方文档引用的 Telegram Notify 是参考示例，非官方维护插件。startup hook 不等同于受监督的常驻服务；心跳发送进程的启动、退出和重启方式在接口验证后定案。
+Herdr 插件接口和真实状态映射必须按安装版本验证。官方文档引用的 Telegram Notify 是参考示例，非官方维护插件。startup hook 不等同于受监督的常驻服务；采集发送端已实现为独立长驻进程，正式监督方式留给 T-012。
 
 ## 状态与显示
 

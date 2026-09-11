@@ -1,10 +1,14 @@
 # 最新交接
 
 日期：2026-09-11
-当前阶段：T-003、T-004、T-006 已完成；下一项为 T-007 Herdr 聚合发送端。尚未进行手机、Windows 或硬件联调。
+当前阶段：T-003、T-004、T-006、T-007 已完成；下一项优先为 T-005 Android/Termux 可行性探针，无手机配合时可推进 T-008 Demo。尚未进行手机、Windows 或硬件联调。
 
 ## 本轮结果
 
+- T-007：实现 Herdr protocol 20 客户端、双快照 reconciliation、历史生命周期核对、逐 pane 状态订阅、多会话聚合、断线重连和 HTTP 心跳发送，证据见 docs/evidence/T-007.md。
+- 发送端启动时先发送 initializing/unknown；采集健康后发送 counts 聚合。Herdr 断线或 schema 失败立即输出 unknown，重连后重新订阅和获取完整快照，不重放灯效积压。
+- Snapshot sender 每进程生成 instance UUID，sequence 严格递增；失败可同 sequence 有界重试，新状态替换未开始的旧重试，稳定状态默认每 5 秒发送新 sequence。
+- 已用模拟 Herdr 完整验证 working → blocked → release 后 idle → 订阅断线 unknown 经真实回环 HTTP 到 Receiver；未读取真实用户会话。
 - T-006：实现跨平台 Node.js Receiver、v1 协议校验、请求体限制、来源限制、顺序/重启处理、心跳超时、dry-run 和 WLED 输出，证据见 docs/evidence/T-006.md。
 - Receiver 默认只监听 `127.0.0.1:8787`，并明确拒绝 `0.0.0.0` / `::`；远程联调需显式填写具体 Tailscale IP。
 - WLED 输出按官方 JSON API 向 `/json/state` POST `{"ps": preset}`；成功状态不重复发送，失败有界重试，后续心跳可恢复，更新状态会取消旧状态尚未发出的重试。
@@ -28,13 +32,12 @@
 
 ## 验证
 
-本轮 `npm test`：23 项通过、0 项失败；`npm run check` 与 `git diff --check` 通过。回环 dry-run 实测初始 unknown、接收 done、15 秒无新 sequence 后回到 unknown，服务随后已停止。本地模拟 WLED 实测接口、preset、去重、失败重试和恢复；不代表真实设备通过。
-本地 Markdown 相对链接检查通过。T-003 提交为 `962b6eb`，T-004 提交为 `ea410ae`；T-006 修改尚未提交。无远程仓库配置。
+本轮 `npm test`：40 项通过、0 项失败；`npm run check` 与 `git diff --check` 通过。T-006 回环 dry-run 实测初始 unknown、接收 done、15 秒无新 sequence 后回到 unknown，服务随后已停止。T-007 使用模拟 Herdr 和真实回环 HTTP Receiver 验证；不代表真机链路通过。
+本地 Markdown 相对链接检查通过。T-003 提交为 `962b6eb`，T-004 提交为 `ea410ae`，T-006 提交为 `9490b97`；T-007 修改尚未提交。无远程仓库配置。
 
 ## 下一步
 
-领取 T-007，复用 shared 协议规则实现 Herdr 生命周期 reconciliation、多会话聚合、5 秒心跳、状态合并发送、断线 unknown 与重连。T-005 可在用户方便操作 Android/Termux 时进行，但没有真机结果不得标记完成。
-T-005 需用户操作 Android 手机，先提供 Termux 环境检查和最小接收步骤；在用户回传结果前只标待验证。
+优先领取 T-005，给用户最短 Android/Termux 环境检查与回环/具体 Tailscale IP 启动步骤，验证服务器到手机 Receiver、热点共存、锁屏和恢复；在用户回传前保持待验证。若用户暂时不方便操作手机，则领取 T-008，实现与正式快照隔离的 Demo 接口。
 
 ## 限制
 

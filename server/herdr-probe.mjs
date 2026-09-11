@@ -82,13 +82,18 @@ function openLines(socket, onMessage) {
 export function requestOnce(socketPath, request, timeoutMs = 10_000) {
   return new Promise((resolve, reject) => {
     const socket = net.createConnection(socketPath);
+    let settled = false;
     const timeout = setTimeout(() => {
+      if (settled) return;
+      settled = true;
       socket.destroy();
       reject(new Error('Herdr 请求超时'));
     }, timeoutMs);
 
     const lines = openLines(socket, (message) => {
       if (message.id !== request.id) return;
+      if (settled) return;
+      settled = true;
       clearTimeout(timeout);
       socket.end();
       if (message.error) reject(new Error(`Herdr API 错误：${message.error.code ?? 'unknown'}`));
@@ -97,10 +102,18 @@ export function requestOnce(socketPath, request, timeoutMs = 10_000) {
 
     socket.once('connect', () => socket.write(`${JSON.stringify(request)}\n`));
     socket.once('error', (error) => {
+      if (settled) return;
+      settled = true;
       clearTimeout(timeout);
       reject(error);
     });
-    socket.once('close', () => lines.close());
+    socket.once('close', () => {
+      lines.close();
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      reject(new Error('Herdr 在返回响应前关闭连接'));
+    });
   });
 }
 
@@ -128,6 +141,11 @@ export function subscribe(socketPath, id, subscriptions, onEvent, timeoutMs = 10
       }
       if (message.id === id) {
         clearTimeout(timeout);
+        if (message.result?.type !== 'subscription_started') {
+          socket.destroy();
+          reject(new Error('Herdr 订阅确认结构无效'));
+          return;
+        }
         acknowledged = true;
         resolve(socket);
         return;
