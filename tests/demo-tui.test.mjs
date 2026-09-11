@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   DEMO_KEYS,
+  DEFAULT_DEMO_URL,
   createDemoSnapshot,
   demoStateForKey,
   parseDemoArguments,
@@ -31,8 +32,8 @@ test('Demo TUI builds a valid manual v1 snapshot', () => {
   assert.equal(snapshot.sent_at, '2026-09-11T08:00:00.000Z');
 });
 
-test('Demo TUI requires a concrete phone v1 endpoint', () => {
-  assert.throws(() => parseDemoArguments([]), /--url/);
+test('Demo TUI defaults to vivo-phone and validates endpoint overrides', () => {
+  assert.equal(parseDemoArguments([]).url.href, DEFAULT_DEMO_URL);
   assert.throws(() => parseDemoArguments(['--url', 'http://phone:8787/state']), /v1\/state/);
   const options = parseDemoArguments([
     '--url', 'http://100.91.207.103:8787/v1/state',

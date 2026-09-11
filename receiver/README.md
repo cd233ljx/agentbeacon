@@ -21,10 +21,10 @@ curl -X DELETE http://127.0.0.1:8787/state
 只做现场展示、不需要读取真实状态时，可以跳过 Herdr 和 Sender。在手机启动 Receiver 后，于服务器运行按键 TUI：
 
 ```bash
-npm run demo -- --url http://<手机地址>:8787/v1/state
+npm run demo
 ```
 
-按 `1`～`5` 分别向手机发送 idle、working、blocked、done、unknown，按 `q` 发送 idle 并退出。TUI 不连接 Herdr，只生成合法的手动 v1 快照；手机 Receiver 仍负责后续 WLED 输出。
+默认目标为 vivo-phone 的 `http://100.91.207.103:8787/v1/state`；地址变化时使用 `npm run demo -- --url http://<手机地址>:8787/v1/state` 覆盖。按 `1`～`5` 分别向手机发送 idle、working、blocked、done、unknown，按 `q` 发送 idle 并退出。TUI 不连接 Herdr，只生成合法的手动 v1 快照；手机 Receiver 仍负责后续 WLED 输出。
 
 Demo 期间正式快照继续缓存但不覆盖灯效，退出后恢复未超时的正式状态，否则显示 unknown。`GET /health` 返回聚合状态、超时、dry-run 和 Demo 标志，不返回任务或 Agent 信息。
 

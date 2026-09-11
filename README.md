@@ -31,7 +31,7 @@ npm test
 
 安全回环链路可依次运行 `npm run receiver` 和 `npm run sender`；Receiver 默认只监听 `127.0.0.1:8787`。
 
-课堂展示可运行 `npm run demo -- --url http://<手机地址>:8787/v1/state`。这个极简 TUI 不连接 Herdr、不读取真实 Agent 状态，而是把按键选择手动发送给手机 Receiver；按 `1`～`5` 切换 idle、working、blocked、done、unknown，按 `q` 发送 idle 并退出。
+课堂展示直接运行 `npm run demo`，默认连接 vivo-phone 的 `100.91.207.103:8787`。这个极简 TUI 不连接 Herdr、不读取真实 Agent 状态，而是把按键选择手动发送给手机 Receiver；按 `1`～`5` 切换 idle、working、blocked、done、unknown，按 `q` 发送 idle 并退出。目标变化时可用 `--url` 覆盖。
 
 ## 目录
 

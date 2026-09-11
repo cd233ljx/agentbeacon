@@ -5,7 +5,8 @@
 
 ## 本轮结果
 
-- 为课堂展示新增极简按键 TUI：不连接 Herdr、不读取真实 Agent 状态；通过 `--url` 把 `1`～`5` 的手动五态选择发送给手机 Receiver，`q` 发送 idle 并退出。原版误做成本机 WLED dry-run，现已按手机链路修正。
+- 为课堂展示新增极简按键 TUI：不连接 Herdr、不读取真实 Agent 状态；`npm run demo` 默认把 `1`～`5` 的手动五态选择发送给 vivo-phone `100.91.207.103:8787`，`q` 发送 idle 并退出，地址变化时才需 `--url`。原版误做成本机 WLED dry-run，现已按手机链路修正并由用户复验通过。
+- 手机当前运行的 `termux-receiver-probe.mjs` 只是入站联调探针，仅校验并打印 v1 状态；它不是完整 Receiver，不含 WLED 输出、状态超时、Demo API 或配置加载。接真实硬件前需将完整版 Receiver 部署到 Termux。
 - T-008：实现显式 Demo 模式；配置启用后 `POST /state` 切换五态，`DELETE /state` 退出，证据见 docs/evidence/T-008.md。
 - Demo 期间正式 `/v1/state` 继续校验、排序和刷新，但不覆盖 Demo；退出恢复未超时正式状态，否则 unknown。默认 `demoEnabled=false`，未启用时接口返回 404。
 - T-005：vivo-phone 的 Termux 单文件 Receiver 已通过 Tailscale 接收服务器 v1 状态；热点同时开启，证据见 docs/evidence/T-005.md。
@@ -38,7 +39,7 @@
 
 ## 验证
 
-本轮 `npm test`：48 项通过、0 项失败；`npm run check`、`git diff --check` 和 Markdown 相对链接检查通过。TUI 已与本机同款 Termux 探针端到端验证 working 和退出 idle；手机 `100.91.207.103:8787` 健康检查当前超时，服务重启后才能真机复验。T-005 已取得早前真机网络和短时锁屏证据，但仍不代表真实 WLED 或长时间后台通过。
+本轮 `npm test`：48 项通过、0 项失败；`npm run check`、`git diff --check` 和 Markdown 相对链接检查通过。TUI 已与本机同款 Termux 探针端到端验证 working 和退出 idle，并在手机服务重启后由用户确认正常。T-005 已取得早前真机网络和短时锁屏证据，但仍不代表真实 WLED 或长时间后台通过。
 T-003 提交为 `962b6eb`，T-004 为 `ea410ae`，T-006 为 `9490b97`，T-007 为 `e1d7bb7`，T-005 为 `8851916`，T-008 基础实现为 `ed6a2ee`。无远程仓库配置。
 
 ## 下一步

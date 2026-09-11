@@ -9,6 +9,8 @@ export const DEMO_KEYS = Object.freeze({
   5: { state: 'unknown', label: '连接异常 / 黄色', color: '\x1b[33m' },
 });
 
+export const DEFAULT_DEMO_URL = 'http://100.91.207.103:8787/v1/state';
+
 export function demoStateForKey(key) {
   return DEMO_KEYS[key]?.state ?? null;
 }
@@ -30,7 +32,11 @@ export function createDemoSnapshot({ sourceId, instanceId, sequence, state, now 
 }
 
 export function parseDemoArguments(arguments_) {
-  const values = { sourceId: 'home-server', requestTimeoutMs: 5_000 };
+  const values = {
+    url: DEFAULT_DEMO_URL,
+    sourceId: 'home-server',
+    requestTimeoutMs: 5_000,
+  };
   for (let index = 0; index < arguments_.length; index += 2) {
     const key = arguments_[index];
     const value = arguments_[index + 1];
@@ -39,9 +45,6 @@ export function parseDemoArguments(arguments_) {
     else if (key === '--source') values.sourceId = value;
     else if (key === '--timeout') values.requestTimeoutMs = Number(value);
     else throw new Error(`未知参数：${key}`);
-  }
-  if (!values.url) {
-    throw new Error('用法：npm run demo -- --url http://<手机地址>:8787/v1/state');
   }
   const url = new URL(values.url);
   if (!['http:', 'https:'].includes(url.protocol) || url.pathname !== '/v1/state') {
