@@ -15,11 +15,12 @@ Agent 先读 [AGENTS.md](AGENTS.md)，再按 [任务看板](docs/tasks.md) 领�
 - [协议与状态规则](docs/protocol.md)
 - [决策与待确认事项](docs/decisions.md)
 - [最新交接](docs/handoff.md)
+- [手机 SSH 操作入口](docs/phone-ssh.md)
 - [原始方案存档](docs/proposal-original.md)（历史参考）
 
 ## 当前进度
 
-已完成 Herdr Unix socket 验证、v1 协议、Receiver、模拟 WLED、聚合发送端、独立 Demo，以及 Android/Termux 的 Tailscale、热点和短时锁屏验证。软件模拟链路已经闭合；下一步 T-009 需要确认和采购 ESP32/灯环，真实 WLED 和 Windows 尚未联调。当前无第三方依赖。
+已完成 Herdr Unix socket 验证、v1 协议、Receiver、模拟 WLED、聚合发送端、独立 Demo，以及 Android/Termux 的 Tailscale、热点和短时锁屏验证。软件模拟链路已经闭合；硬件待到货，具体型号与供电仍待核实；真实 WLED 和 Windows 尚未联调。完整版手机 Receiver 已经 SSH 安装并验证远程状态接收；硬件未到，灯光输出和后台稳定性待验收。当前无第三方依赖。
 
 ```bash
 cd /home/cd233/CODE/Linux_Exp/agentbeacon
@@ -32,6 +33,10 @@ npm test
 `npm run receiver` 默认只监听本机 `127.0.0.1:8787`；`npm run sender` 则默认从 Herdr Unix socket 读取真实状态并发送至 vivo-phone 的 `100.91.207.103:8787`。
 
 课堂展示直接运行 `npm run demo`，默认连接 vivo-phone 的 `100.91.207.103:8787`。这个极简 TUI 不连接 Herdr、不读取真实 Agent 状态，而是把按键选择手动发送给手机 Receiver；按 `1`～`5` 切换 idle、working、blocked、done、unknown，按 `q` 发送 idle 并退出。目标变化时可用 `--url` 覆盖。
+
+## 手机运行包
+
+运行 `npm run package:receiver` 生成 `dist/agentbeacon-receiver-0.1.0.tgz` 和 SHA-256 校验文件。手机无硬件时先用 dry-run；安装、启停、日志、超时验证和回滚见 [Termux 完整版 Receiver 指南](docs/termux-receiver.md)。
 
 ## 目录
 

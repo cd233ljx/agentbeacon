@@ -1,9 +1,34 @@
 # 最新交接
 
-日期：2026-09-11
-当前阶段：T-003～T-008 均已完成；软件模拟链路闭合。下一项 T-009 需要确认/采购 ESP32、灯环和供电；Android/Termux 网络已验证，Windows 和真实 WLED 尚未联调。
+日期：2026-09-12
+当前阶段：T-003～T-008、T-012A、T-010A、T-012B 完成。用户选择先用 WLED 跑通，再规划自研固件。硬件尚未到货，型号/灯数/供电未提供。完整版 Receiver 已通过 SSH 部署到手机，当前等待硬件到货后配置 WLED 并实测灯光。
 
-## 本轮结果
+## 运行包准备记录（手机部署前）
+
+- 新增 scripts/package-receiver.mjs、receiver/config.termux.example.json、docs/termux-receiver.md、docs/evidence/T-012A.md；同步 package.json、.gitignore、README、receiver/README、proposal、tasks、decisions 和交接。
+- `npm run package:receiver` 生成 dist/agentbeacon-receiver-0.1.0.tgz 和同名 .sha256；dist 不入版本管理。包只含 11 个所需文件，运行无需 npm install；手机启动入口 `npm start` 明确使用 receiver/config.json。
+- 示例监听手机上次验证的 100.91.207.103:8787，dryRun=true；安装前核对手机当前 Tailscale IP。仓库默认开发监听仍为回环。
+- 本机 Linux / Node v24.18.0 / npm 11.16.0：解包后独立 npm start、模拟 WLED 五态、去重、实际默认 15 秒超时及恢复通过；直接 Node 启动 dry-run 并 SIGINT 退出码 0。48 项测试、npm run check、git diff --check 和 Markdown 相对链接检查通过。详细证据见 [T-012A](evidence/T-012A.md)。
+- 未修改 Receiver 业务逻辑，未新增依赖，未连接手机或读取真实 Herdr 会话，未开放下载服务或改动常驻进程；测试服务和临时目录已清理。
+- 纠正操作说明：按键 TUI 不发持续心跳，停留超过约 15 秒会 unknown；固定显示使用显式 HTTP Demo，持续真实状态使用 Sender。TUI 与 Sender 不应同时运行。
+
+## 最新运行状态：已停止后台实例
+
+用户准备在 Termux 前台启动并查看 Demo 打印。已通过 SSH 核对 PID 16384 的命令和 cwd 确属 receiver-et6Qrz，发送 SIGTERM 后确认进程消失、8787 health 不可访问。当前没有由本任务保留的 Receiver 后台服务；receiver.pid 中的 16384 是历史值，不能据此直接杀进程。用户随后在手机前台启动并运行服务器 Demo，回复“可以了”，确认手机打印正常。当前前台服务是否继续运行以用户会话为准。下一步等待硬件到货，核实板型、灯数和供电后执行 T-009 的 WLED 配置，再完成 T-010 真实灯环联调。此前部署记录中的“运行中”仅代表当时状态。
+
+## 手机 SSH 配置（T-012B）
+
+用户要求持久化登录配置，已创建本机 .local/ssh/config，别名 agentbeacon-phone。项目根目录使用 `ssh -F .local/ssh/config agentbeacon-phone`；SCP 同样支持 `-F`。指定专用密钥和已核对的 known_hosts，开启严格校验，未修改全局 SSH 设置。实测 whoami/node --version 返回 u0_a320/v26.3.1。详见 [手机 SSH 操作入口](phone-ssh.md)。.local 不入 Git，不输出其中私钥；仓库迁移需更新配置中的绝对路径。本轮同时修复任务表 T-012 行误拆，文档和任务表一致性检查通过。
+
+## 下一步与限制
+
+手机安装目录：`/data/data/com.termux/files/home/agentbeacon/releases/receiver-et6Qrz`；PID 16384（操作前须重新核对 PID 与命令），日志 receiver.log，配置 receiver/config.json。当前 detached Node 进程在 SSH 断开后仍运行，不具备自动重启；未配置 wake-lock 或自启。重启可进入该目录执行 `npm start`；停止时先检查 receiver.pid 指向的命令，再给本项目 Receiver 发送 SIGTERM。SSH 使用 u0_a320@100.91.207.103:8022；项目专用密钥和经用户核对的 known_hosts 位于 .local/ssh/，不入库。用户已添加公钥；不要输出私钥或更改全局认证。
+
+手机 Node v26.3.1 / npm 11.17.0；安装包 SHA-256 校验通过，远程 working 快照 applied，health 为 working/timed_out=false/dry_run=true。仅进行一次接收检查，未重复完整模拟测试。证据见 [T-010A](evidence/T-010A.md)。硬件未到，保留 dryRun=true，不向占位 WLED 地址发送请求。
+
+T-009 等硬件到货后核实板型、灯数、供电/GPIO，再配置 WLED preset；T-010 完成真机链路。T-011 Windows 备用及 T-012 进程管理和最终交付未完成。此前 T-005 仅证明旧探针网络及约 20 秒锁屏，不能外推到完整 Receiver 后台稳定性。真实 WLED/ESP32、Windows 未验证。新一轮自研固件尚未启动。
+
+## 先前结果（截至 2026-09-11）
 
 - 为课堂展示新增极简按键 TUI：不连接 Herdr、不读取真实 Agent 状态；`npm run demo` 默认把 `1`～`5` 的手动五态选择发送给 vivo-phone `100.91.207.103:8787`，`q` 发送 idle 并退出，地址变化时才需 `--url`。原版误做成本机 WLED dry-run，现已按手机链路修正并由用户复验通过。
 - 手机当前运行的 `termux-receiver-probe.mjs` 只是入站联调探针，仅校验并打印 v1 状态；它不是完整 Receiver，不含 WLED 输出、状态超时、Demo API 或配置加载。接真实硬件前需将完整版 Receiver 部署到 Termux。
@@ -38,15 +63,7 @@
 - README 和各模块说明统一为 Android 主接收端、Windows 备用；绿色常亮，无自动完成计时器。
 - D-004 已由用户确认：关闭完成会话后清除其完成状态，按剩余会话重新聚合，无其他有效任务则熄灯；通信异常仍为 unknown。
 
-## 验证
+## 先前验证
 
 本轮 `npm test`：48 项通过、0 项失败；`npm run check`、`git diff --check` 和 Markdown 相对链接检查通过。TUI 已与本机同款 Termux 探针端到端验证 working 和退出 idle，并在手机服务重启后由用户确认正常。T-005 已取得早前真机网络和短时锁屏证据，但仍不代表真实 WLED 或长时间后台通过。
 T-003 提交为 `962b6eb`，T-004 为 `ea410ae`，T-006 为 `9490b97`，T-007 为 `e1d7bb7`，T-005 为 `8851916`，T-008 基础实现为 `ed6a2ee`。无远程仓库配置。
-
-## 下一步
-
-开始 T-009 前向用户确认现有硬件或采购清单，只核实具体 ESP32 板型、灯环灯数、5V 供电和 GPIO；没有硬件时不伪造 WLED 实测。若暂不采购，可先做 T-011 Windows 备用验证。
-
-## 限制
-
-当前开发 Agent 不在 Herdr 托管 pane 内，未越权读取用户 Herdr 会话；真实样本由用户在 Herdr shell pane 内运行白名单采样器取得。Agy 的普通提问 UI 在 0.8.2 下未识别为 blocked。pane_closed 未单独落日志，但 Agent release 已验证，用户确认无需补采。无手机/Windows/ESP32/真实 WLED 实测证据；硬件未购买。dry-run Receiver 已停止；未启动常驻服务、未安装插件、未改全局环境或网络。

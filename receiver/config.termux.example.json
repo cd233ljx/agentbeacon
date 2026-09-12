@@ -1,0 +1,17 @@
+{
+  "host": "100.91.207.103",
+  "port": 8787,
+  "allowedSourceId": "home-server",
+  "receiverTimeoutMs": 15000,
+  "requestTimeoutMs": 2000,
+  "demoEnabled": false,
+  "dryRun": true,
+  "wledBaseUrl": "http://192.168.1.100",
+  "presets": {
+    "idle": 1,
+    "working": 2,
+    "blocked": 3,
+    "done": 4,
+    "unknown": 5
+  }
+}

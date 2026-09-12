@@ -2,6 +2,8 @@
 
 跨平台 Node.js 原生 HTTP 服务。Android Termux 为主，Windows 为备用。正式同步使用 `POST /v1/state`；配置 `demoEnabled: true` 后可用独立 Demo 接口。已实现心跳超时、去重、WLED 恢复和 dry-run，具体规则见 [协议与状态规则](../docs/protocol.md)。
 
+手机版打包与安装见 [Termux 完整版 Receiver 指南](../docs/termux-receiver.md)。仓库内 `npm run receiver` 默认读取 config.example.json；运行包的 `npm start` 则明确读取 receiver/config.json。
+
 默认示例以 dry-run 监听回环地址，不会访问配置中的占位 WLED：
 
 ```bash
@@ -26,6 +28,8 @@ npm run demo
 
 默认目标为 vivo-phone 的 `http://100.91.207.103:8787/v1/state`；地址变化时使用 `npm run demo -- --url http://<手机地址>:8787/v1/state` 覆盖。按 `1`～`5` 分别向手机发送 idle、working、blocked、done、unknown，按 `q` 发送 idle 并退出。TUI 不连接 Herdr，只生成合法的手动 v1 快照；手机 Receiver 仍负责后续 WLED 输出。
 
-Demo 期间正式快照继续缓存但不覆盖灯效，退出后恢复未超时的正式状态，否则显示 unknown。`GET /health` 返回聚合状态、超时、dry-run 和 Demo 标志，不返回任务或 Agent 信息。
+按键 TUI 仅在按键时发正式快照，不持续发心跳；超过接收超时会显示 unknown，且不具有下述 HTTP Demo 隔离。
+
+显式 HTTP Demo 期间正式快照继续缓存但不覆盖灯效，退出后恢复未超时的正式状态，否则显示 unknown。`GET /health` 返回聚合状态、超时、dry-run 和 Demo 标志，不返回任务或 Agent 信息。
 
 参考任务 T-005、T-006、T-008、T-010、T-011；不在核心逻辑中依赖 shell 或 systemd。
