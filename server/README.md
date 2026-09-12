@@ -11,6 +11,6 @@ npm run receiver
 npm run sender
 ```
 
-默认发送端配置连接 `127.0.0.1:8787`，Herdr socket 优先使用 `herdrSocketPath`，其次使用 `HERDR_SOCKET_PATH`，最后使用默认 session 的 `~/.config/herdr/herdr.sock`。自定义配置使用 `npm run sender -- --config <path>`；远程 Receiver 地址必须显式填写具体 Tailscale IP。
+默认发送端配置连接 vivo-phone 的 `http://100.91.207.103:8787/v1/state`。Herdr socket 优先使用 `herdrSocketPath`，其次使用 `HERDR_SOCKET_PATH`，最后使用默认 session 的 `~/.config/herdr/herdr.sock`。地址变化时可用 `npm run sender -- --config <path>` 覆盖；远程 Receiver 地址必须是具体 Tailscale IP。
 
 快照、心跳、超时、重试、重连与旧状态淘汰规则以 [协议与状态规则](../docs/protocol.md) 为准。正式进程监督留给 T-012。

@@ -11,6 +11,11 @@ function minimal(overrides = {}) {
 }
 
 test('sender config uses injected Herdr socket then the default session path', () => {
+  const defaultReceiver = validateSenderConfig({ sourceId: 'home-server' }, {
+    environment: { HERDR_SOCKET_PATH: '/tmp/default-receiver.sock' },
+  });
+  assert.equal(defaultReceiver.receiverUrl, 'http://100.91.207.103:8787/v1/state');
+
   const injected = validateSenderConfig(minimal(), {
     environment: { HERDR_SOCKET_PATH: '/tmp/injected.sock' },
   });

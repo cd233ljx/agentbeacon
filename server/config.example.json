@@ -1,6 +1,6 @@
 {
   "sourceId": "home-server",
-  "receiverUrl": "http://127.0.0.1:8787/v1/state",
+  "receiverUrl": "http://100.91.207.103:8787/v1/state",
   "heartbeatIntervalMs": 5000,
   "requestTimeoutMs": 2000,
   "herdrRequestTimeoutMs": 10000

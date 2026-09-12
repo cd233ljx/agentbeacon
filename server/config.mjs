@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { validateSourceId } from '../shared/protocol.mjs';
 
 export const DEFAULT_SENDER_CONFIG = Object.freeze({
+  receiverUrl: 'http://100.91.207.103:8787/v1/state',
   heartbeatIntervalMs: 5_000,
   requestTimeoutMs: 2_000,
   herdrRequestTimeoutMs: 10_000,

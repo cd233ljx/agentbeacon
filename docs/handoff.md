@@ -7,6 +7,7 @@
 
 - 为课堂展示新增极简按键 TUI：不连接 Herdr、不读取真实 Agent 状态；`npm run demo` 默认把 `1`～`5` 的手动五态选择发送给 vivo-phone `100.91.207.103:8787`，`q` 发送 idle 并退出，地址变化时才需 `--url`。原版误做成本机 WLED dry-run，现已按手机链路修正并由用户复验通过。
 - 手机当前运行的 `termux-receiver-probe.mjs` 只是入站联调探针，仅校验并打印 v1 状态；它不是完整 Receiver，不含 WLED 输出、状态超时、Demo API 或配置加载。接真实硬件前需将完整版 Receiver 部署到 Termux。
+- Herdr Sender 的默认 Receiver 地址也已改为 vivo-phone `100.91.207.103:8787/v1/state`；手机探针启动后直接运行 `npm run sender` 即可转发真实 Herdr 状态，地址变化时仍可用自定义配置覆盖。
 - T-008：实现显式 Demo 模式；配置启用后 `POST /state` 切换五态，`DELETE /state` 退出，证据见 docs/evidence/T-008.md。
 - Demo 期间正式 `/v1/state` 继续校验、排序和刷新，但不覆盖 Demo；退出恢复未超时正式状态，否则 unknown。默认 `demoEnabled=false`，未启用时接口返回 404。
 - T-005：vivo-phone 的 Termux 单文件 Receiver 已通过 Tailscale 接收服务器 v1 状态；热点同时开启，证据见 docs/evidence/T-005.md。

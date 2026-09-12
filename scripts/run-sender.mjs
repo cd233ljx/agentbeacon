@@ -11,7 +11,7 @@ function configPathFromArgs(arguments_) {
 const config = await loadSenderConfig(configPathFromArgs(process.argv.slice(2)));
 const app = createSenderApp(config);
 app.start();
-console.log(`AgentBeacon 发送端已启动（source=${config.sourceId}, heartbeat=${config.heartbeatIntervalMs}ms）`);
+console.log(`AgentBeacon 发送端已启动（source=${config.sourceId}, receiver=${config.receiverUrl}, heartbeat=${config.heartbeatIntervalMs}ms）`);
 
 let stopping = false;
 async function stop() {
