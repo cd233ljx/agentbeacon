@@ -2,6 +2,12 @@
 
 日期：2026-09-13。当前 T-013 为 review：用户要求先写自研固件供人工审阅、边学边做。已完成源码、目标构建与桌面验证；不要因缺少硬件重新阻止软件 review。
 
+## GitHub 私有仓库已就绪（T-014）
+
+已创建 https://github.com/cd233ljx/agentbeacon，GitHub API 返回 PRIVATE；origin 指向该 HTTPS 仓库，main 已推送并跟踪 origin/main。固件提交为 fbecdc1。推送前检查暂存路径及历史/暂存私钥、GitHub token 标记，无命中；.local、热点 config.local.h、.pio、dist 均不入库。
+
+Windows 优先克隆 `git clone https://github.com/cd233ljx/agentbeacon.git`，需使用有权限的 GitHub 账号。克隆后让当地 Codex 读取 docs/windows-handoff.md，复用桌面 Windows 工具缓存和私有热点配置；这些不随 Git 传输。已收到 Windows firmware.bin 生成日志，下一步核对 COM3 后上传，尚未刷机。
+
 ## 最新接续：转交 Windows 本地 Codex
 
 用户决定复制完整项目到 Windows 工作区，让当地 Codex 操作 USB/COM3。优先阅读 [Windows 接续说明](windows-handoff.md)：保留桌面现有 Windows venv、工具缓存及可能已填写的 config.local.h；不要复制 Linux .local/.pio，不自动迁移手机私钥。用户随后提供 Windows 编译日志，已成功生成 firmware.bin（RAM 43528 bytes / Flash 759573 bytes），尚未刷机。完整源码包包含未提交固件，排除本地配置和 Git 历史。后续开发命令由 Windows Codex 执行，用户负责物理接线和观察。

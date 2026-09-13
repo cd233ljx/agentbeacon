@@ -11,6 +11,10 @@
 - 曾指导复制桌面 firmware\include\config.example.h 为 config.local.h，并填写热点凭据；尚未确认实际填写情况。新工作区若没有本地配置，优先检查桌面原文件，复制时不在日志输出其内容、不覆盖已有新配置，不要求用户把密码发到聊天。
 - 尚无上传 COM3、接灯或真灯验证证据。当前阶段灯输出应保持 false，先做开发板联网。
 
+## GitHub 克隆入口
+
+私有仓库 https://github.com/cd233ljx/agentbeacon 已创建并推送 main；Windows 使用有权限的 GitHub 登录后克隆。源码包含本轮固件和交接，不含桌面工具环境、Wi-Fi 本地配置或手机私钥。优先克隆，而非使用此前源码 ZIP。
+
 ## 工作区迁移
 
 Linux .local 含 Linux Python 环境、工具链缓存及手机 SSH 私钥，不复制为 Windows 工具环境。firmware/.pio 也不要跨系统复用。提供的完整源码 ZIP 包含当前未提交固件和项目文档，但不含 .git 历史、.local、.pio、dist、node_modules 和本地配置。

@@ -21,6 +21,6 @@
 | T-012 | 运行管理与交付 | todo | T-010 | — | Linux 进程管理、Termux 启停/后台说明、演示脚本、故障排查和回滚齐全；部署需实际授权 |
 | T-013 | 单颗 RGB 自研固件及学习说明 | review | classic ESP32；D-010/D-011 | Codex | 已完成五态/HTTP/配置源码、IO25/26/27 接线和刷机指南、目标编译、C++ 故障测试和 Receiver 协议联测；证据 docs/evidence/T-013.md；等待用户 review，真机未验收 |
 
-| T-014 | GitHub 私有仓库与 Windows 克隆交接 | doing | 用户授权；GitHub 登录 | Codex | 私有仓库创建、源码提交推送、远端校验；不上传密钥/本地配置/缓存 |
+| T-014 | GitHub 私有仓库与 Windows 克隆交接 | done | 用户授权；GitHub 登录 | Codex | cd233ljx/agentbeacon 创建为 PRIVATE；main 推送成功；GitHub 可见性已校验；源码不含本地密钥/配置/缓存；见 handoff |
 
 独立起点：T-003 与 T-005；没有手机或硬件访问时可推进模拟器、协议中已明确部分和测试，不伪造设备结果。
