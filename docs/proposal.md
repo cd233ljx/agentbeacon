@@ -1,15 +1,15 @@
 # AgentBeacon 当前执行方案
 
 更新：2026-09-12。本文是当前方案的唯一依据；原始讨论保留在 proposal-original.md。
-状态：架构、第一版范围、Herdr 接口和 AgentBeacon v1 协议已确定；手机网络及硬件仍待实测。未决事项见 decisions.md。
+状态：Herdr 与手机链路已验证；当前按 D-010 开发单颗 RGB 自研固件供 review，接线和真灯待实测。未决事项见 decisions.md。
 
 ## 目标与范围
 
-在 Linux 家用服务器上获取 Herdr 内启动的终端 Coding Agent 状态，聚合后经 Tailscale 发送至 Android 手机。手机在 Termux 中运行 Node.js Receiver，通过手机热点内的 HTTP 调用 WLED，驱动 ESP32 + RGB 灯环。
+在 Linux 家用服务器上获取 Herdr 内启动的终端 Coding Agent 状态，聚合后经 Tailscale 发送至 Android 手机。手机在 Termux 中运行 Node.js Receiver，通过手机热点内 HTTP 调用 ESP32-WROOM-32D 自研固件，驱动一颗四脚 RGB 灯。设备兼容现有 /json/state preset 请求；WS2812B 灯环/WLED 作为可选路径。
 
 Windows 笔记本作为备用 Receiver。软件由 Agent 开发；用户负责确认产品规则、手机配置、硬件采购接线及最终实物验收。
 
-第一版不包含 Herdr 外部任务、数据库、前端、蓝牙通信、自研 ESP32 固件、多服务器汇总或公网服务。
+第一版不包含 Herdr 外部任务、数据库、前端、蓝牙通信、多服务器汇总或公网服务。按 D-010 提前开发 ESP32-WROOM-32D + 单颗普通 RGB 灯固件，供人工 review；原 WLED/灯环路径保留为可选方案。
 
 ## 架构与职责
 
@@ -22,12 +22,12 @@ Linux 家用服务器
 Android 手机
   Termux / Node.js Receiver
     → 手机热点内 HTTP
-    → ESP32 / WLED → WS2812B RGB 灯环
+    → ESP32 / 自研固件 → 单颗四脚 RGB 灯
 
 备用：Windows / Node.js Receiver（需单独验证其到 WLED 的局域网路径）
 ```
 
-Herdr 负责原始状态识别，server 通过 Herdr Unix socket 采集状态，shared 负责聚合规则，server 负责远程同步，receiver 负责状态接收与 preset 映射，WLED 负责灯效。Unix socket 是唯一预期状态来源；CLI 仅用于只读核实版本、帮助和 socket 配置，不以 CLI 输出或终端正文代替状态接口。
+Herdr 负责原始状态识别，server 通过 Herdr Unix socket 采集状态，shared 负责聚合规则，server 负责远程同步，receiver 负责状态接收与 preset 映射，设备固件负责灯效；现有 Receiver 输出模块仍沿用 WLED 命名以保持兼容。Unix socket 是唯一预期状态来源；CLI 仅用于只读核实版本、帮助和 socket 配置，不以 CLI 输出或终端正文代替状态接口。
 
 Herdr 插件接口和真实状态映射必须按安装版本验证。官方文档引用的 Telegram Notify 是参考示例，非官方维护插件。startup hook 不等同于受监督的常驻服务；采集发送端已实现为独立长驻进程，正式监督方式留给 T-012。
 
@@ -62,13 +62,15 @@ Herdr 插件接口和真实状态映射必须按安装版本验证。官方文�
 
 提供显式 Demo 模式，可手动切换所有 preset；HTTP Demo 期间真实心跳不覆盖演示状态，退出后恢复最新有效状态，过期则 unknown。另提供不读取 Herdr 状态的极简按键 TUI，由服务器把人工选择的五态发送给手机 Receiver。
 
-服务器到手机失联且手机到 WLED 正常时，可显示黄色。Receiver 崩溃、手机休眠暂停进程、WLED 断网或掉电时，无法承诺黄色，可能保留旧灯效或熄灭。第一版记录这一边界，不虚构设备看门狗能力。
+服务器到手机失联且手机到 WLED 正常时，可显示黄色。Receiver 崩溃、手机休眠暂停进程、WLED 断网或掉电时，无法承诺黄色，可能保留旧灯效或熄灭。自研版可在自身 Wi-Fi 断开时显示 unknown，但没有设备心跳看门狗；手机进程停止且热点仍在时可能保留旧色。设备重启后需手机重新发状态；当前不保证自动同步。
 
 ## 手机与硬件验证
 
 Android 手机为主接收端，需同时运行 Termux、Tailscale 和热点。先实测服务器可访问 Receiver；购买硬件后实测手机可访问热点客户端 ESP32。验证锁屏、后台限制和网络恢复。演示可保持亮屏；无法稳定后台运行时记录操作限制。
 
-用户反馈硬件尚未到货，具体订单未提供。原候选：ESP32-WROOM-32 DevKit、WS2812B 16 灯环、合适的 5V 电源与数据线、接线材料、SN74AHCT125 电平转换器。
+用户提供套件开发板模块型号 ESP32-WROOM-32D，拟使用套件四脚 RGB 灯。已确认共阴，按 D-011 使用 IO25/26/27 分别控制红绿蓝，每路 220Ω，阴极接 GND、USB 供电；固件默认禁用输出，断电接线核对后由本地配置启用。具体说明见 [固件 review 指南](../firmware/README.md)。
+
+原灯环路径候选（当前无需额外采购）：ESP32-WROOM-32 DevKit、WS2812B 16 灯环、合适的 5V 电源与数据线、接线材料、SN74AHCT125 电平转换器。
 
 具体板型、GPIO、灯环电流和供电路径在采购前核对。先低亮度测试并共地；不默认任意开发板的 USB→5V 引脚都能可靠承载灯环。手机通信与灯环供电分开考虑。
 
@@ -77,11 +79,11 @@ Android 手机为主接收端，需同时运行 Termux、Tailscale 和热点。�
 1. 采样 Herdr Unix socket 的真实状态并核实路径、权限、协议及插件生命周期。
 2. 无硬件验证服务器 → 手机 Receiver 打印模拟状态。
 3. 编写聚合、接收、模拟 WLED 和故障测试。
-4. 确认并采购硬件，刷 WLED、保存 preset，再接通手机 → 灯环。
+4. 单颗 RGB 固件先完成 review；硬件到货后确认灯脚、GPIO 和电阻，刷机并接通手机 → 灯。可选 WLED 路径另行配置。
 5. 完成真实多 Agent 全链路、断线恢复和独立 Demo。
 6. 完成 Linux 进程管理、Termux/Windows 使用说明及答辩材料。Termux 运行包和说明（T-012A）可先于硬件到货完成，设备验收仍依赖 T-010。
 
-第一版继续采用 WLED，跑通后再规划自研固件；本轮不启动固件实现。
+按 2026-09-12 最新 D-010，立即开发单颗 RGB 自研固件，不等待 WLED 或硬件到货。设备输出接收现有 preset 1～5 请求；接线与刷机需硬件信息确认后验收。
 
 具体验收、依赖和证据见 tasks.md。没有真机证据不算完成全链路。
 

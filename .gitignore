@@ -9,3 +9,5 @@ coverage/
 .DS_Store
 dist/
 .local/
+firmware/.pio/
+firmware/include/config.local.h

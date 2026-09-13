@@ -12,6 +12,7 @@
     "receiver": "node scripts/run-receiver.mjs",
     "package:receiver": "node scripts/package-receiver.mjs",
     "sender": "node scripts/run-sender.mjs",
+    "test:firmware": "node scripts/verify-firmware.mjs",
     "test": "node --test"
   }
 }
