@@ -15,6 +15,7 @@ export class SnapshotSender {
   #active = null;
   #closed = false;
   #heartbeat = null;
+  #lastLogged = null;
   #pending = null;
   #wakeDelay = null;
 
@@ -95,6 +96,7 @@ export class SnapshotSender {
           await this.#send(snapshot);
           break;
         } catch (error) {
+          this.#lastLogged = null;
           this.logger.warn?.(`Receiver 同步失败（sequence=${snapshot.sequence}, attempt=${attempt + 1}）：${error.message}`);
           if (this.#pending) break;
           if (!error.retryable || attempt >= this.retryDelaysMs.length) break;
@@ -134,6 +136,18 @@ export class SnapshotSender {
       || result.sequence !== snapshot.sequence
       || !DISPOSITIONS.has(result.disposition)
     ) throw new SendError('Receiver 成功响应与请求不匹配');
+
+    const ignored = ['stale', 'retired_instance'].includes(result.disposition);
+    const key = JSON.stringify([snapshot.state, snapshot.cause, ignored ? result.disposition : 'confirmed']);
+    if (key !== this.#lastLogged) {
+      const detail = `state=${snapshot.state} cause=${snapshot.cause} sequence=${snapshot.sequence} disposition=${result.disposition}`;
+      if (ignored) {
+        this.logger.warn?.(`Receiver 未采用快照 ${detail}；请检查是否同时运行 Demo 或其他 Sender，退出冲突进程后重启所需发送端`);
+      } else {
+        this.logger.info?.(`Receiver 已确认快照 ${detail}`);
+      }
+      this.#lastLogged = key;
+    }
   }
 
   #delay(milliseconds) {

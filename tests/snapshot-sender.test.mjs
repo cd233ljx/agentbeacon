@@ -126,3 +126,57 @@ test('sender interoperates with the Receiver over loopback HTTP', async (context
   assert.deepEqual(states, ['unknown', 'done']);
   await sender.stop();
 });
+
+test('sender logs confirmations, suppresses heartbeats and reports recovery and retired instances', async () => {
+  const infos = [];
+  const warnings = [];
+  let disposition = 'applied';
+  let fail = false;
+  const sender = new SnapshotSender({
+    receiverUrl: 'http://127.0.0.1/v1/state', sourceId: 'home-server', instanceId,
+    retryDelaysMs: [],
+    logger: { info: (line) => infos.push(line), warn: (line) => warnings.push(line) },
+    fetchImpl: async (_url, options) => fail
+      ? new Response('', { status: 503 })
+      : accepted(JSON.parse(options.body), disposition),
+  });
+  async function send(view = working) {
+    sender.update(view);
+    await sender.waitForIdle();
+  }
+  try {
+    await send();
+    disposition = 'refreshed';
+    await send();
+    disposition = 'duplicate';
+    await send();
+    assert.equal(infos.length, 1);
+    assert.match(infos[0], /state=working cause=aggregate sequence=1 disposition=applied/);
+    fail = true;
+    await send();
+    assert.equal(infos.length, 1);
+    assert.equal(warnings.length, 1);
+    fail = false;
+    disposition = 'refreshed';
+    await send();
+    assert.equal(infos.length, 2);
+    disposition = 'retired_instance';
+    await send();
+    await send();
+    assert.equal(infos.length, 2);
+    assert.equal(warnings.length, 2);
+    assert.match(warnings[1], /未采用快照.*retired_instance/);
+    disposition = 'stale';
+    await send();
+    assert.equal(infos.length, 2);
+    assert.equal(warnings.length, 3);
+    disposition = 'applied';
+    await send({ state: 'unknown', cause: 'collector_unavailable' });
+    await send({ state: 'unknown', cause: 'initializing' });
+    assert.equal(infos.length, 4);
+    assert.match(infos[2], /state=unknown cause=collector_unavailable/);
+    assert.match(infos[3], /state=unknown cause=initializing/);
+  } finally {
+    await sender.stop();
+  }
+});

@@ -1,7 +1,7 @@
 # AgentBeacon 当前执行方案
 
 更新：2026-09-12。本文是当前方案的唯一依据；原始讨论保留在 proposal-original.md。
-状态：Herdr 与手机链路已验证；当前按 D-010 开发单颗 RGB 自研固件供 review，接线和真灯待实测。未决事项见 decisions.md。
+状态：单颗 RGB 自研固件已刷入实物，Demo、真实 Herdr 联调及最终接线已获用户整体验收；证据与未测边界见 evidence/T-010.md。未决事项见 decisions.md。
 
 ## 目标与范围
 

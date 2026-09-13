@@ -224,6 +224,8 @@ Receiver 为配置的 `source_id` 保存当前 `instance_id`、最高 `sequence`
 
 ## Demo 隔离
 
+注意：按键 TUI（`npm run demo`）走正式 `/v1/state`，不属于下面的隔离机制。它与真实 Sender 共用 source_id，新 instance 首包会退休旧 instance，没有固定 Demo/真实优先级；应退出当前发送器再启动另一个，恢复被退休的发送器须重启。
+
 正式同步只使用 `/v1/state`。简化的 `POST /state`、`{"state":"blocked"}` 仅属于显式 Demo 模式：
 
 - Demo 未启用时拒绝该接口。

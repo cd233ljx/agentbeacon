@@ -86,6 +86,7 @@ export class WledOutput {
     });
     await response.arrayBuffer();
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    this.logger.info?.(`WLED 已应用 state=${state} preset=${preset}`);
   }
 
   #delay(milliseconds) {

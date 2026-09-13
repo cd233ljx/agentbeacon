@@ -20,7 +20,7 @@ Agent 先读 [AGENTS.md](AGENTS.md)，再按 [任务看板](docs/tasks.md) 领�
 
 ## 当前进度
 
-已完成 Herdr Unix socket 验证、v1 协议、Receiver、模拟 WLED、聚合发送端、独立 Demo，以及 Android/Termux 的 Tailscale、热点和短时锁屏验证。软件模拟链路已经闭合；硬件待到货，具体型号与供电仍待核实；真实 WLED 和 Windows 尚未联调。完整版手机 Receiver 已经 SSH 安装并验证远程状态接收；硬件未到，灯光输出和后台稳定性待验收。Node.js 链路无第三方依赖；固件使用固定版本 PlatformIO/Arduino 工具链。
+已完成 Herdr Unix socket 验证、v1 协议、Receiver、模拟 WLED、聚合发送端、独立 Demo，以及 Android/Termux 的 Tailscale、热点和短时锁屏验证。用户已确认服务器 Demo 控制 ESP32 单颗 RGB 真灯，五态和超时恢复通过；真实 Herdr 联调及最终接线已获用户整体验收，详见 [真机验收](docs/evidence/T-010.md)；长期后台稳定性和 Windows 尚待验证。Node.js 链路无第三方依赖；固件使用固定版本 PlatformIO/Arduino 工具链。
 
 ```bash
 cd /home/cd233/CODE/Linux_Exp/agentbeacon
@@ -36,7 +36,7 @@ npm test
 
 ## 单颗 RGB 自研固件
 
-已提供 ESP32-WROOM-32D 固件 review 稿，阅读 [固件学习与 review 指南](firmware/README.md)。包含五态灯效、HTTP preset 兼容、极性配置和桌面测试。GPIO 默认禁用，接线与刷机仍待设备确认。
+已完成 classic ESP32 单灯固件并由用户在 32E 实物刷机验收，阅读 [固件学习与 review 指南](firmware/README.md)。包含五态灯效、HTTP preset 兼容、极性配置和桌面测试。仓库示例 GPIO 输出默认禁用；本次实物最终接线坐标见 [验收记录](docs/evidence/T-010.md)。
 
 ## 手机运行包
 

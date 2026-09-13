@@ -4,7 +4,6 @@ import http from 'node:http';
 import { WledOutput } from '../receiver/wled-output.mjs';
 
 const presets = { idle: 1, working: 2, blocked: 3, done: 4, unknown: 5 };
-const quietLogger = { info() {}, warn() {} };
 
 function fakeResponse(status) {
   return {
@@ -16,6 +15,7 @@ function fakeResponse(status) {
 
 test('WLED output posts preset mapping and does not restart an applied state', async (context) => {
   const requests = [];
+  const logs = [];
   const mock = http.createServer(async (request, response) => {
     let body = '';
     request.setEncoding('utf8');
@@ -31,7 +31,7 @@ test('WLED output posts preset mapping and does not restart an applied state', a
     baseUrl: `http://127.0.0.1:${address.port}`,
     presets,
     retryDelaysMs: [],
-    logger: quietLogger,
+    logger: { info: (message) => logs.push(message) },
   });
   context.after(() => output.close());
 
@@ -42,6 +42,10 @@ test('WLED output posts preset mapping and does not restart an applied state', a
   output.ensureState('blocked');
   await output.waitForIdle();
 
+  assert.deepEqual(logs, [
+    'WLED 已应用 state=unknown preset=5',
+    'WLED 已应用 state=blocked preset=3',
+  ]);
   assert.deepEqual(requests, [
     { method: 'POST', url: '/json/state', body: { ps: 5 } },
     { method: 'POST', url: '/json/state', body: { ps: 3 } },
@@ -51,11 +55,13 @@ test('WLED output posts preset mapping and does not restart an applied state', a
 test('WLED output retries a bounded cycle and a later heartbeat recovers it', async () => {
   const calls = [];
   const statuses = [503, 503, 503, 200];
+  const logs = [];
+  const warnings = [];
   const output = new WledOutput({
     baseUrl: 'http://127.0.0.1:1',
     presets,
     retryDelaysMs: [0, 0],
-    logger: quietLogger,
+    logger: { info: (message) => logs.push(message), warn: (message) => warnings.push(message) },
     fetchImpl: async (_url, options) => {
       calls.push(JSON.parse(options.body));
       return fakeResponse(statuses.shift());
@@ -65,9 +71,16 @@ test('WLED output retries a bounded cycle and a later heartbeat recovers it', as
   output.ensureState('working');
   await output.waitForIdle();
   assert.equal(calls.length, 3);
+  assert.deepEqual(logs, []);
+  assert.equal(warnings.length, 3);
   output.ensureState('working');
   await output.waitForIdle();
   assert.deepEqual(calls, [{ ps: 2 }, { ps: 2 }, { ps: 2 }, { ps: 2 }]);
+  assert.deepEqual(logs, ['WLED 已应用 state=working preset=2']);
+  output.ensureState('working');
+  await output.waitForIdle();
+  assert.equal(logs.length, 1);
+  assert.equal(calls.length, 4);
   output.close();
 });
 

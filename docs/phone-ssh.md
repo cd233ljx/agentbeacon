@@ -1,5 +1,8 @@
 # 手机 SSH 操作入口
 
+最新运行状态：用户要求改为手机前台启动；已核对 PID 20548 的命令与 cwd 后发送 SIGTERM，确认进程退出并清除 receiver.pid。后台 Receiver 已停止，手机可执行 `cd ~/agentbeacon/releases/receiver-et6Qrz && npm start`。下文后台启动记录为本轮验证历史。
+
+
 已于 2026-09-12 在本开发机持久化项目专用连接，别名为 `agentbeacon-phone`。在项目根目录执行：
 
 ```bash
@@ -37,7 +40,7 @@ scp -F .local/ssh/config dist/agentbeacon-receiver-0.1.0.tgz agentbeacon-phone:~
 ssh -F .local/ssh/config agentbeacon-phone 'tail -n 30 ~/agentbeacon/releases/receiver-et6Qrz/receiver.log'
 ```
 
-先前的 detached Node 进程已按用户手动演示安排停止；当前由用户在 Termux 前台执行 npm start。receiver.pid 可能仍为旧值；未配置开机自启或崩溃重启。停止前读取 receiver.pid，并核对该 PID 的命令仍是此目录的 Receiver；不要仅凭历史 PID 杀进程。更新部署后同步 .local/phone-release 及交接目录。手机 SSH 可用不代表灯环或后台稳定性已验收。
+2026-09-13 T-015 已更新真实输出日志并以 nohup 后台启动，日志追加到 receiver.log；核对后的本轮 PID 20548 已写入 receiver.pid。配置 dryRun=false，灯地址 http://10.40.220.147。未配置开机自启或崩溃重启。停止前读取 receiver.pid，并核对该 PID 的命令仍是此目录的 Receiver；不要仅凭历史 PID 杀进程。更新部署后同步 .local/phone-release 及交接目录。手机 SSH 可用不代表灯环或后台稳定性已验收。
 
 ## 验证记录（T-012B）
 

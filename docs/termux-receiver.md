@@ -1,8 +1,8 @@
 # 手机完整版 Receiver 运行指南
 
-适用：Android / Termux，Node.js >=24。第一版使用 WLED，自研固件留到 WLED 全链路通过后另行规划。当前手机的单文件 probe 仅用于打印状态；本包包含正式协议校验、来源和顺序检查、15 秒超时、WLED 输出及 HTTP Demo。无第三方运行依赖，无需 npm install。
+适用：Android / Termux，Node.js >=24。当前使用 ESP32 单颗 RGB 自研固件，兼容 WLED preset 接口。当前手机的单文件 probe 仅用于打印状态；本包包含正式协议校验、来源和顺序检查、15 秒超时、WLED 输出及 HTTP Demo。无第三方运行依赖，无需 npm install。
 
-本指南的运行包只在 Linux 解包验证过；手机安装、后台稳定性和真实 WLED 仍待验收。
+运行包已在手机安装验证；用户确认服务器 Demo 真灯五态及超时恢复通过。长期后台稳定性、真实 Herdr 多 Agent 全链路与可选 WLED 硬件仍待验收。
 
 ## 1. 生成与传入手机
 
@@ -102,7 +102,7 @@ POST 激活独立 HTTP Demo，正式心跳继续缓存但不覆盖显示；DELET
 node scripts/run-receiver.mjs --config receiver/config.json >> receiver.log 2>&1
 ```
 
-仍在当前会话前台运行，可按 Ctrl+C 停止；另一个会话进入同目录后用 `tail -n 80 receiver.log` 查看。日志会追加，长期运行前需另行安排轮转。dry-run 会记录状态/preset，真实输出目前只记录失败；没有成功日志不等于灯未更新。
+仍在当前会话前台运行，可按 Ctrl+C 停止；另一个会话进入同目录后用 `tail -n 80 receiver.log` 查看。日志会追加，长期运行前需另行安排轮转。dry-run 打印 `DRY-RUN WLED state=working preset=2`；真实输出在设备 HTTP 成功响应且响应体读取完成后打印 `WLED 已应用 state=working preset=2`。重复相同状态的有效心跳不重复请求或打印；失败仍打印警告，重试或后续心跳恢复成功时打印成功日志。成功日志证明 HTTP 请求成功，不替代肉眼检查灯效。
 
 演示优先保持 Termux 会话和手机亮屏。需要测试锁屏时，可先执行 `termux-wake-lock`，结束后执行 `termux-wake-unlock`；不要关闭承载服务的 Termux 会话。唤醒锁不提供崩溃重启，也不证明厂商后台限制已解决。当前只验证过旧探针约 20 秒锁屏，完整版需要重新测试。后台自启、守护和 Linux 进程管理仍属于后续 T-012。
 
