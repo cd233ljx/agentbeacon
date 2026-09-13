@@ -4,15 +4,18 @@
   "private": true,
   "description": "Linux AI Coding Agent 物理状态指示系统",
   "type": "module",
-  "engines": { "node": ">=24" },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "doctor": "node scripts/doctor.mjs",
     "check": "node scripts/check.mjs",
-    "demo": "node scripts/demo-tui.mjs",
+    "demo": "node --env-file-if-exists=.env.local scripts/demo-tui.mjs",
     "receiver": "node scripts/run-receiver.mjs",
     "package:receiver": "node scripts/package-receiver.mjs",
-    "sender": "node scripts/run-sender.mjs",
+    "sender": "node --env-file-if-exists=.env.local scripts/run-sender.mjs",
     "test:firmware": "node scripts/verify-firmware.mjs",
     "test": "node --test"
-  }
+  },
+  "license": "Apache-2.0"
 }

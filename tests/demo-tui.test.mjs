@@ -32,14 +32,14 @@ test('Demo TUI builds a valid manual v1 snapshot', () => {
   assert.equal(snapshot.sent_at, '2026-09-11T08:00:00.000Z');
 });
 
-test('Demo TUI defaults to vivo-phone and validates endpoint overrides', () => {
-  assert.equal(parseDemoArguments([]).url.href, DEFAULT_DEMO_URL);
+test('Demo TUI defaults to loopback and validates endpoint overrides', () => {
+  assert.equal(parseDemoArguments([], { environment: {} }).url.href, DEFAULT_DEMO_URL);
   assert.throws(() => parseDemoArguments(['--url', 'http://phone:8787/state']), /v1\/state/);
   const options = parseDemoArguments([
-    '--url', 'http://100.91.207.103:8787/v1/state',
+    '--url', 'http://192.0.2.10:8787/v1/state',
     '--source', 'home-server',
   ]);
-  assert.equal(options.url.href, 'http://100.91.207.103:8787/v1/state');
+  assert.equal(options.url.href, 'http://192.0.2.10:8787/v1/state');
 });
 
 test('Demo TUI posts the snapshot and verifies the response', async () => {
@@ -63,4 +63,14 @@ test('Demo TUI posts the snapshot and verifies the response', async () => {
   assert.equal(request.url, 'http://phone:8787/v1/state');
   assert.equal(JSON.parse(request.options.body).state, 'working');
   assert.equal(result.disposition, 'applied');
+});
+
+
+test('Demo URL precedence is CLI, environment, then loopback', () => {
+  const environment = { AGENTBEACON_RECEIVER_URL: 'http://192.0.2.10:8787/v1/state' };
+  assert.equal(parseDemoArguments([], { environment }).url.href, environment.AGENTBEACON_RECEIVER_URL);
+  assert.equal(parseDemoArguments(['--url', DEFAULT_DEMO_URL], { environment }).url.href, DEFAULT_DEMO_URL);
+  assert.throws(() => parseDemoArguments([], {
+    environment: { AGENTBEACON_RECEIVER_URL: 'http://user:secret@host/v1/state' },
+  }), /不能包含凭据/);
 });

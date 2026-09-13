@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { validateSourceId } from '../shared/protocol.mjs';
 
 export const DEFAULT_SENDER_CONFIG = Object.freeze({
-  receiverUrl: 'http://100.91.207.103:8787/v1/state',
+  receiverUrl: 'http://127.0.0.1:8787/v1/state',
   heartbeatIntervalMs: 5_000,
   requestTimeoutMs: 2_000,
   herdrRequestTimeoutMs: 10_000,
@@ -21,7 +21,12 @@ export function validateSenderConfig(input, { environment = process.env } = {}) 
   if (!input || typeof input !== 'object' || Array.isArray(input)) {
     throw new Error('发送端配置必须是 JSON 对象');
   }
-  const config = { ...DEFAULT_SENDER_CONFIG, ...input };
+  const config = {
+    ...DEFAULT_SENDER_CONFIG,
+    ...(environment.AGENTBEACON_RECEIVER_URL
+      ? { receiverUrl: environment.AGENTBEACON_RECEIVER_URL } : {}),
+    ...input,
+  };
   validateSourceId(config.sourceId);
   integer('heartbeatIntervalMs', config.heartbeatIntervalMs, 250, 3_600_000);
   integer('requestTimeoutMs', config.requestTimeoutMs, 100, 60_000);

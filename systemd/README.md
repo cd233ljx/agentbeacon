@@ -1,7 +1,5 @@
-# Linux 服务器进程管理（后续阶段）
+# 进程管理边界
 
-仅用于 Linux 服务器侧，Herdr 适配进程的具体监督方式需先完成 T-003。
+首版使用手动前台运行，不提供或安装 systemd unit、开机自启、崩溃重启服务。此目录保留为可选扩展入口，不是开发未完成的占位要求。
 
-Android Receiver 在 Termux 运行，Windows 为备用；两者不使用这里的 systemd unit。T-012 分别提供对应平台启停和恢复说明。
-
-当前不安装 unit、不启用自启动、不启动常驻服务。
+Linux Sender 启停见 [server](../server/README.md)，Android Receiver 见 [Termux 指南](../docs/termux-receiver.md)。不要用 Linux 服务管理方式替代 Android 后台稳定性验证。

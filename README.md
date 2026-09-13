@@ -1,58 +1,77 @@
 # AgentBeacon
 
-基于 Linux 与 IoT 的 AI Coding Agent 物理状态指示系统。
+把 AI Coding Agent 的工作状态变成桌面上的一颗灯。
 
-Linux / Herdr 内终端 Agent → 状态聚合 → Tailscale → Android / Termux Receiver → 手机热点 → ESP32 自研固件 → 单颗 RGB 灯（WLED/灯环为可选方案）。
+AgentBeacon 从 **Linux 上的 Herdr** 获取终端 Agent 状态，经 Tailscale 发送到 **Android/Termux**，再通过手机热点控制 **ESP32 + 单颗 RGB 灯**。首版开发和真机用户验收已完成。
 
-Windows 为备用接收端。完成显示绿色常亮。软件开发由 Agent 执行，项目规则和任务进度统一维护在仓库中。
-
-## 开始开发
-
-Agent 先读 [AGENTS.md](AGENTS.md)，再按 [任务看板](docs/tasks.md) 领取工作。
-
-- [当前执行方案](docs/proposal.md)
-- [项目管理规则](docs/project-management.md)
-- [协议与状态规则](docs/protocol.md)
-- [决策与待确认事项](docs/decisions.md)
-- [最新交接](docs/handoff.md)
-- [手机 SSH 操作入口](docs/phone-ssh.md)
-- [原始方案存档](docs/proposal-original.md)（历史参考）
-
-## 当前进度
-
-已完成 Herdr Unix socket 验证、v1 协议、Receiver、模拟 WLED、聚合发送端、独立 Demo，以及 Android/Termux 的 Tailscale、热点和短时锁屏验证。用户已确认服务器 Demo 控制 ESP32 单颗 RGB 真灯，五态和超时恢复通过；真实 Herdr 联调及最终接线已获用户整体验收，详见 [真机验收](docs/evidence/T-010.md)；长期后台稳定性和 Windows 尚待验证。Node.js 链路无第三方依赖；固件使用固定版本 PlatformIO/Arduino 工具链。
-
-```bash
-cd /home/cd233/CODE/Linux_Exp/agentbeacon
-npm ci
-npm run doctor
-npm run check
-npm test
+```text
+Herdr → Linux Sender → Tailscale → 手机 Receiver → 热点 → ESP32 → RGB 灯
 ```
 
-`npm run receiver` 默认只监听本机 `127.0.0.1:8787`；`npm run sender` 则默认从 Herdr Unix socket 读取真实状态并发送至 vivo-phone 的 `100.91.207.103:8787`。
-
-课堂展示直接运行 `npm run demo`，默认连接 vivo-phone 的 `100.91.207.103:8787`。这个极简 TUI 不连接 Herdr、不读取真实 Agent 状态，而是把按键选择手动发送给手机 Receiver；按 `1`～`5` 切换 idle、working、blocked、done、unknown，按 `q` 发送 idle 并退出。目标变化时可用 `--url` 覆盖。
-
-## 单颗 RGB 自研固件
-
-已完成 classic ESP32 单灯固件并由用户在 32E 实物刷机验收，阅读 [固件学习与 review 指南](firmware/README.md)。包含五态灯效、HTTP preset 兼容、极性配置和桌面测试。仓库示例 GPIO 输出默认禁用；本次实物最终接线坐标见 [验收记录](docs/evidence/T-010.md)。
-
-## 手机运行包
-
-运行 `npm run package:receiver` 生成 `dist/agentbeacon-receiver-0.1.0.tgz` 和 SHA-256 校验文件。手机无硬件时先用 dry-run；安装、启停、日志、超时验证和回滚见 [Termux 完整版 Receiver 指南](docs/termux-receiver.md)。
-
-## 目录
-
-| 目录 | 职责 |
+| 状态 | 灯效 |
 | --- | --- |
-| firmware/ | 单颗 RGB 自研固件、配置示例和 C++ 测试 |
-| server/ | Herdr 适配、远程发送 |
-| receiver/ | 跨平台 HTTP 接收、WLED preset 映射 |
-| shared/ | 状态协议与聚合 |
-| tests/ | 后续单元与模拟集成测试 |
-| scripts/ | 环境与语法检查 |
-| systemd/ | Linux 服务器后续进程管理 |
-| docs/ | 方案、任务、决策、交接与验收证据 |
+| idle | 熄灭 |
+| working | 蓝色呼吸 |
+| blocked | 红色闪烁，等待必要输入或授权 |
+| done | 绿色常亮，后台完成尚未查看 |
+| unknown | 黄色慢闪，状态未知或通信超时 |
 
-开发默认回环监听；私网联调使用接收端具体 Tailscale IP。
+多个 Agent 按 `blocked > working > unknown > done > idle` 聚合。正常心跳不会反复重启灯效。Herdr 当前页面中的任务完成可能直接回到 idle；done 没有独立的自动熄灭计时器。
+
+## 准备什么
+
+- Linux 上运行 Herdr：本项目已验证 **0.8.2 / socket protocol 20**。
+- Node.js **>=24**；Node 链路无第三方运行依赖。
+- Android 手机：Termux、Node.js、Tailscale 和可供 ESP32 连接的 2.4GHz 热点。
+- classic ESP32 开发板、共阴四脚 RGB 灯、三根 220Ω 电阻、面包板和 USB 线。
+
+实物使用 ESP32 32E，GPIO25/26/27 分别连接红/绿/蓝，每路串联一个电阻。WLED 是可选兼容路径，本固件不是完整 WLED。
+
+## 先在电脑上试用
+
+```bash
+git clone https://github.com/cd233ljx/agentbeacon.git
+cd agentbeacon
+npm ci
+npm test
+npm run receiver
+```
+
+Receiver 默认在 `127.0.0.1:8787` 运行 dry-run，不连接灯。在另一个交互式终端运行：
+
+```bash
+npm run demo -- --url http://127.0.0.1:8787/v1/state
+```
+
+按 1～5 切换五态，Receiver 会打印 state/preset；重复相同状态不刷屏。按 q 发送 idle 并退出。按键 Demo 不持续发心跳，停留约 15～16 秒会进入 unknown。
+
+Sender 和按键 Demo 默认连接回环地址。远程使用可复制 `.env.example` 为 `.env.local`，设置 `AGENTBEACON_RECEIVER_URL`；`npm run sender` 和 `npm run demo` 会自动读取它。`.env.local` 不入 Git。Demo 的 `--url`、Sender 显式配置中的 receiverUrl 优先于环境变量。
+
+## 连接真实灯
+
+1. 按 [硬件接线与刷机](firmware/WIRING.md) 配置热点并上传固件。示例输出默认禁用，确认接线后在本地配置启用。
+2. 按 [Termux Receiver 指南](docs/termux-receiver.md) 安装运行包，填写手机 Tailscale IP、设备热点 IP；先 dry-run，再切换真实输出。
+3. 在 Linux 可以用上述 `.env.local` 后直接运行 `npm run sender`；或复制 `server/config.example.json` 为 `server/config.json`，把 receiverUrl 改为自己的 `http://手机TailscaleIP:8787/v1/state`，然后运行：
+
+```bash
+npm run sender -- --config server/config.json
+```
+
+Sender 默认每 5 秒同步，Receiver 默认 15 秒无新快照变 unknown。日志中的“Receiver 已确认”表示接收端确认快照；手机的“WLED 已应用”表示设备 HTTP 请求成功，实际灯效以设备观察为准。
+
+**按键 Demo 与真实 Sender 交替运行。** 两者没有固定优先级，新实例首包会退休旧实例；切回时重新启动所需发送器。显式 HTTP Demo 的隔离机制见 [协议](docs/protocol.md)。
+
+## 文档与验证
+
+- [文档导航](docs/README.md)
+- [固件原理](firmware/README.md)与[接线指南](firmware/WIRING.md)
+- [状态协议](docs/protocol.md)、[Sender](server/README.md)、[Receiver](receiver/README.md)
+- [兼容性与已知限制](docs/limitations.md)
+- [用户真机验收记录](docs/evidence/T-010.md)
+- [贡献指南](CONTRIBUTING.md)与[开发测试](docs/development.md)
+
+Android 真灯和真实 Herdr 联调已获用户验收；Windows Receiver、长期后台运行、真实 WLED 硬件不在已验证承诺中。手机进程暂停或设备重启时的显示行为见已知限制。
+
+## 许可证
+
+[Apache License 2.0](LICENSE)。第三方工具和平台保留各自许可。开源发布准备与历史清理边界见 [发布说明](docs/release.md)。

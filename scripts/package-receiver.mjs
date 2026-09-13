@@ -13,6 +13,7 @@ const destination = resolve(root, 'dist');
 const staging = await mkdtemp(join(tmpdir(), 'agentbeacon-receiver-'));
 // 明确列出文件，避免将本机配置、日志、凭据或服务器代码收入运行包。
 const files = [
+  'LICENSE', 'NOTICE',
   'receiver/config.mjs', 'receiver/server.mjs', 'receiver/state-store.mjs',
   'receiver/wled-output.mjs', 'receiver/config.example.json',
   'receiver/config.termux.example.json', 'shared/protocol.mjs',
@@ -24,9 +25,9 @@ try {
     await copyFile(join(root, file), join(staging, file));
   }
   await copyFile(join(root, 'docs/termux-receiver.md'), join(staging, 'README.md'));
-  const { version, engines } = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
+  const { version, engines, license } = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
   await writeFile(join(staging, 'package.json'), `${JSON.stringify({
-    name: 'agentbeacon-receiver', version, private: true, type: 'module', engines,
+    name: 'agentbeacon-receiver', version, private: true, type: 'module', engines, license,
     scripts: { start: 'node scripts/run-receiver.mjs --config receiver/config.json' },
   }, null, 2)}\n`);
   await mkdir(destination, { recursive: true });

@@ -1,6 +1,6 @@
-# AgentBeacon 单颗 RGB 固件：第一版 review 稿
+# AgentBeacon 单颗 RGB 固件
 
-目标：ESP32-WROOM-32D 开发板 + 一颗四脚 RGB 灯。让你在硬件到货前阅读、理解并 review 源码。固件不读取 Agent 数据，只接收手机转发的灯效编号。无需先完成 WLED 版。
+目标：classic ESP32 开发板 + 一颗四脚 RGB 灯。已在 32E 实物完成用户验收；以下介绍配置和实现。固件不读取 Agent 数据，只接收手机转发的灯效编号。无需先完成 WLED 版。
 
 **当前不能照默认配置直接接灯：输出默认关闭，GPIO 已定为 R=25/G=26/B=27，Wi-Fi 配置为空。** 编译成功只证明代码能构建成 ESP32 程序，接线、Wi-Fi、PWM 真实波形及颜色需要设备验收。
 
@@ -25,7 +25,7 @@ main.cpp：把亮度交给 ESP32 的三路 PWM
 
 ## 推荐阅读顺序
 
-1. [config.example.h](include/config.example.h)：先看用户需要填写什么。空 Wi-Fi 密码表示开放热点，并非自动配置；SSID 为空时不连接。不要把真实热点密码发给我或提交 Git。
+1. [config.example.h](include/config.example.h)：先看用户需要填写什么。空 Wi-Fi 密码表示开放热点，并非自动配置；SSID 为空时不连接。不要公开真实热点密码或提交 Git。
 2. [beacon.h](include/beacon.h) 的 State/name：理解 1～5 到状态名的映射。
 3. 同文件的 color：理解“状态 + 已经过的时间 → RGB 亮度”。它不需要 ESP32，可以在电脑上直接测试。
 4. 同文件的 parsePreset：只接受约定的短请求；非法输入不改变状态。
@@ -44,7 +44,7 @@ RGB 灯有三个发光通道，共用另一根脚。PWM 可以理解为让一个
 - unknown：红绿同时亮 1000 ms、灭 1000 ms；实际黄色情况取决于灯珠和电阻，待真机调整。
 - 重复收到同一个状态，不重置动画起点。状态切换才重新计时。
 
-以上节奏和亮度是供 review 的工程初值，不是用户已验收的效果。`millis()` 的无符号减法能处理一次计数回绕，不会因大约 49.7 天的计数溢出永久停灯。
+以上为首版默认节奏，实物五态已获用户验收；其他灯珠的视觉亮度可能不同。`millis()` 的无符号减法能处理一次计数回绕，不会因大约 49.7 天的计数溢出永久停灯。
 
 共阴灯的公共脚接地，控制值增大通常越亮；共阳灯的逻辑相反，pwm() 把控制值反转。这里仅说明原理，**不是这套未知灯珠的具体接线图**。还需核实公共脚位置、允许电流、压降及开发板引脚。尤其不能未经核实就把公共脚接 5V、同时让 ESP32 GPIO 直接连接灯脚。
 
@@ -65,7 +65,7 @@ HTTP 服务使用 ESP-IDF 自带 esp_http_server，无第三方 JSON 库。最�
 
 仅启用 Wi-Fi STA，连接用户配置的手机热点，不创建开放 AP，不在开发机开放服务。设备 HTTP 服务没有应用层认证，同热点的可达客户端也能控制灯，不应做公网端口转发。
 
-## 当前故障边界：review 时重点看
+## 故障边界
 
 1. 开机默认 unknown。没配置 Wi-Fi 时也保持 unknown，输出禁用则仅日志说明。
 2. Wi-Fi 断开时，显示 unknown；每 10 秒发起一次重连尝试，底层同时允许自动重连。重新连上后恢复内存里最后期望状态。断线期间新状态可能尚未收到，因此恢复并不表示数据一定新鲜。
@@ -88,15 +88,15 @@ npm run check
 
 `test:firmware` 需要本机 g++ 和 AddressSanitizer/UBSan（可用 CXX 指定兼容编译器）。这是桌面 C++ 逻辑测试，不是 ESP32 模拟器。首次新机器需先建 Python venv，并在其中安装 `platformio==6.1.18`；工具和缓存留在 .local 下。
 
-编译输出在 `.pio/build/esp32dev/`，Git 忽略；配置示例可以直接编译，但灯脚不会输出。`esp32dev` 是 classic ESP32 4MB 的通用构建目标，不代表红色开发板的物理排针布局已经确认。flash 容量到货核对；完整刷机步骤和端口识别见 [接线与首次演示指南](WIRING.md)。
+编译输出在 `.pio/build/esp32dev/`，Git 忽略；配置示例可以直接编译，但灯脚不会输出。`esp32dev` 是 classic ESP32 4MB 的通用构建目标，不代表红色开发板的物理排针布局已经确认。实际 flash 容量请在刷机前核对；完整刷机步骤和端口识别见 [接线与首次演示指南](WIRING.md)。
 
-## 硬件到货后启用
+## 配置并启用输出
 
 复制 include/config.example.h 为 include/config.local.h，填写热点 SSID/密码。已按 KE3069 官方板图选定 IO25/26/27、共阴和每路 220Ω。按接线指南断电接好并核对实物后，将 BEACON_LED_ENABLED 改为 true 并重新编译。GPIO 有保守白名单和互异检查，但编译通过仍不能替代板上布线核对。
 
 刷机之后，从 115200 波特率串口查看设备取得的 IP。手机停止现有 Receiver，备份 receiver/config.json，将 wledBaseUrl 改为该 IP 的 HTTP 地址，dryRun 改为 false，再前台启动。字段名仍叫 wledBaseUrl，只是复用接口，不代表设备跑了 WLED。
 
-按 Demo 的 1～5 观察实际灯效，再检查热点断开和重连；最后检查真实 Agent 链路。手机 TUI 本身不持续发心跳，停留 15 秒后会由手机超时转 unknown。无需修改已经运行的手机软件来 review 本固件，本轮不操作手机服务。
+按 Demo 的 1～5 观察实际灯效，再检查热点断开和重连；最后检查真实 Agent 链路。手机 TUI 本身不持续发心跳，停留 15 秒后会由手机超时转 unknown。设备重启后的同步边界见上文。
 
 ## 官方接口依据
 
@@ -107,7 +107,7 @@ npm run check
 
 ## KE3069 官方教程核对（2026-09-12）
 
-用户提供 [Keyes 项目06 RGB LED 教程](https://www.keyesrobot.cn/projects/KE3069/zh-cn/latest/docs/5.Arduino%20C%20%E6%95%99%E7%A8%8B%20Windows%20%E7%B3%BB%E7%BB%9F.html#rgb-led)。教程明确标注四脚共阴，元件清单为三根 220Ω 电阻；按该套件参考电路，红、绿、蓝每路各串一个 220Ω。用户反馈电阻数量为 12 根，具体各阻值数量未另核对。
+用户提供 [Keyes 项目06 RGB LED 教程](https://www.keyesrobot.cn/projects/KE3069/zh-cn/latest/docs/5.Arduino%20C%20%E6%95%99%E7%A8%8B%20Windows%20%E7%B3%BB%E7%BB%9F.html#rgb-led)。教程明确标注四脚共阴，元件清单为三根 220Ω 电阻；按该套件参考电路，红、绿、蓝每路各串一个 220Ω。
 
 官方灯珠示意图从图示方向左到右为 R、公共阴极（最长脚）、G、B。灯珠转向后左右会变化，实物需对照图的方向，不能把“左边第一脚”脱离朝向使用。公共阴极接 GND，固件 BEACON_COMMON_ANODE=false 与此匹配。
 

@@ -1,5 +1,5 @@
 {
-  "host": "100.91.207.103",
+  "host": "127.0.0.1",
   "port": 8787,
   "allowedSourceId": "home-server",
   "receiverTimeoutMs": 15000,

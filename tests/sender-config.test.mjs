@@ -14,7 +14,7 @@ test('sender config uses injected Herdr socket then the default session path', (
   const defaultReceiver = validateSenderConfig({ sourceId: 'home-server' }, {
     environment: { HERDR_SOCKET_PATH: '/tmp/default-receiver.sock' },
   });
-  assert.equal(defaultReceiver.receiverUrl, 'http://100.91.207.103:8787/v1/state');
+  assert.equal(defaultReceiver.receiverUrl, 'http://127.0.0.1:8787/v1/state');
 
   const injected = validateSenderConfig(minimal(), {
     environment: { HERDR_SOCKET_PATH: '/tmp/injected.sock' },
@@ -40,4 +40,16 @@ test('sender config rejects unsafe URL forms and invalid timeouts', () => {
     () => validateSenderConfig(minimal({ heartbeatIntervalMs: 1_000, requestTimeoutMs: 1_000 })),
     /必须小于/,
   );
+});
+
+
+test('sender URL precedence is explicit config, environment, then loopback', () => {
+  const environment = { AGENTBEACON_RECEIVER_URL: 'http://192.0.2.10:8787/v1/state' };
+  assert.equal(validateSenderConfig({ sourceId: 'home-server' }, { environment }).receiverUrl,
+    environment.AGENTBEACON_RECEIVER_URL);
+  assert.equal(validateSenderConfig(minimal(), { environment }).receiverUrl,
+    'http://127.0.0.1:8787/v1/state');
+  assert.throws(() => validateSenderConfig({ sourceId: 'home-server' }, {
+    environment: { AGENTBEACON_RECEIVER_URL: 'http://user:secret@host/v1/state' },
+  }), /不能包含凭据/);
 });

@@ -9,7 +9,7 @@ export const DEMO_KEYS = Object.freeze({
   5: { state: 'unknown', label: '连接异常 / 黄色', color: '\x1b[33m' },
 });
 
-export const DEFAULT_DEMO_URL = 'http://100.91.207.103:8787/v1/state';
+export const DEFAULT_DEMO_URL = 'http://127.0.0.1:8787/v1/state';
 
 export function demoStateForKey(key) {
   return DEMO_KEYS[key]?.state ?? null;
@@ -31,9 +31,9 @@ export function createDemoSnapshot({ sourceId, instanceId, sequence, state, now 
   };
 }
 
-export function parseDemoArguments(arguments_) {
+export function parseDemoArguments(arguments_, { environment = process.env } = {}) {
   const values = {
-    url: DEFAULT_DEMO_URL,
+    url: environment.AGENTBEACON_RECEIVER_URL || DEFAULT_DEMO_URL,
     sourceId: 'home-server',
     requestTimeoutMs: 5_000,
   };

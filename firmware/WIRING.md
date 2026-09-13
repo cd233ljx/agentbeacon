@@ -87,11 +87,13 @@ $env:PLATFORMIO_CORE_DIR = "$PWD/.local/platformio"
 
 COM5 只是例子，不要照抄到其他端口。上传会替换板上原有程序。串口监视器使用 Ctrl+C 退出，再做下一次上传，避免占用串口。
 
-### 当前 Linux 开发机
+### Linux
 
-本机已有项目内工具链；仅当板子实际接到这台主机时运行：
+首次先创建工具环境；仅当板子实际连接这台主机时上传：
 
 ```bash
+python3 -m venv .local/firmware-tools
+.local/firmware-tools/bin/python -m pip install platformio==6.1.18
 export PLATFORMIO_CORE_DIR="$PWD/.local/platformio"
 .local/firmware-tools/bin/pio run -d firmware
 .local/firmware-tools/bin/pio device list
@@ -104,7 +106,7 @@ export PLATFORMIO_CORE_DIR="$PWD/.local/platformio"
 .local/firmware-tools/bin/pio device monitor --port /dev/ttyUSB0 --baud 115200
 ```
 
-端口无权限时先记录报错，不通过全局 chmod 放开串口权限。以上 Windows 流程尚未实机验证；本轮只实测本机 Linux 编译，没有执行任何 upload。
+端口无权限时先记录报错，不通过全局 chmod 放开串口权限。固件已由用户在实物刷入并验收；不同机器仍须核对实际串口。
 
 ## 5. 看串口，确认开机
 
@@ -132,17 +134,17 @@ curl --noproxy '*' --max-time 3 http://ESP32实际IP/health
 手机当前运行的 Receiver 如果在前台，先 Ctrl+C。进入：
 
 ```bash
-cd ~/agentbeacon/releases/receiver-et6Qrz
+cd ~/agentbeacon/releases/你的实际安装目录
 cp receiver/config.json "receiver/config.backup.$(date +%Y%m%d-%H%M%S).json"
 ```
 
-编辑 receiver/config.json，把 `wledBaseUrl` 改为 `http://ESP32实际IP`，`dryRun` 改为 false；保留手机 host=100.91.207.103（若 Tailscale 地址没有变化）、presets 1～5 和 demoEnabled=false。再运行 `npm start`。字段名 wledBaseUrl 沿用现有接口，不表示设备运行 WLED。
+编辑 receiver/config.json，把 `wledBaseUrl` 改为 `http://ESP32实际IP`，`dryRun` 改为 false；将 host 设置为手机自己的具体 Tailscale IP，并保留 presets 1～5 和 demoEnabled=false。再运行 `npm start`。字段名 wledBaseUrl 沿用现有接口，不表示设备运行 WLED。
 
 ## 7. 开始演示与排查
 
-服务器项目目录运行 `npm run demo`，不要同时运行真实 Sender。按 1～5，分别观察熄灭、蓝色呼吸、红色闪烁、绿色常亮、黄色慢闪。
+服务器项目目录运行 `npm run demo -- --url http://手机TailscaleIP:8787/v1/state`，不要同时运行真实 Sender。按 1～5，分别观察熄灭、蓝色呼吸、红色闪烁、绿色常亮、黄色慢闪。
 
-TUI 只在按键时发送。停留超过约 15 秒变黄是手机通信超时，不是 RGB 固件的 done 自动熄灭。需要长时间保持某态，使用指南中的显式 HTTP Demo；需要持续真实状态，退出 TUI 后运行 npm run sender。
+TUI 只在按键时发送。停留超过约 15 秒变黄是手机通信超时，不是 RGB 固件的 done 自动熄灭。需要长时间保持某态，使用指南中的显式 HTTP Demo；需要持续真实状态，退出 TUI 后按发送端指南配置并运行 Sender。
 
 | 现象 | 先检查 |
 | --- | --- |
@@ -153,6 +155,10 @@ TUI 只在按键时发送。停留超过约 15 秒变黄是手机通信超时，
 | 某一种颜色不亮 | 断电检查该路电阻和孔组，不能移除电阻尝试 |
 | 固件刷机后还显示 unknown | 切换 Demo 状态或重启 Receiver，确保发出新请求 |
 
-这份指南定义接法与步骤，尚未宣称实物通过。成功后记录板子型号、设备 IP、五态结果、断线恢复和现象；再进入真实 Agent 全链路验收。
+首版实物已经用户验收；其他开发板按电气标号接线，不能照搬物理孔位。成功后记录板子型号、设备 IP、五态结果、断线恢复和现象；再进入真实 Agent 全链路验收。
 
 依据：[Keyes 主板介绍](https://www.keyesrobot.cn/projects/KE3069/zh-cn/latest/docs/%E4%B8%BB%E6%9D%BF%E4%BB%8B%E7%BB%8D/2.%E4%B8%BB%E6%9D%BF%E4%BB%8B%E7%BB%8D.html)、[RGB 教程](https://www.keyesrobot.cn/projects/KE3069/zh-cn/latest/docs/5.Arduino%20C%20%E6%95%99%E7%A8%8B%20Windows%20%E7%B3%BB%E7%BB%9F.html#rgb-led)、[PlatformIO 上传参数](https://docs.platformio.org/en/latest/core/userguide/cmd_run.html)、[串口监视器](https://docs.platformio.org/en/latest/core/userguide/device/cmd_monitor.html)。
+
+## 已验证的紧凑面包板布局
+
+[实物验收记录](../docs/evidence/T-010.md)提供 3V3=C40、A/B 两列露出的孔位表。该表仅适用于同样的板型和朝向；公共脚及引脚必须以实物标号确认，不适用于任意面包板摆放。
